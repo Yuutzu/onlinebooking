@@ -1,0 +1,44 @@
+# Vendor directories
+vendor/
+
+# Composer files
+composer.lock
+
+# Environment and config files
+.env
+.env.local
+
+# Database files
+*.sql
+
+# Uploaded files and images
+admin/dist/img/*
+client/dist/img/*
+uploads/*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+error_log
+debug.log
+
+# Temporary files
+*.tmp
+*.cache
+temp/
+tmp/
+
+# PHP
+*.php~
+.phpunit.result.cache
