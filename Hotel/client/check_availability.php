@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 )
             )";
 
-    $stmt = $conn->prepare($sql);
+    $stmt = $mysqli->prepare($sql);
     $stmt->bind_param("iissssss", $adult, $child, $check_in, $check_out, $check_in, $check_out, $check_in, $check_out);
     $stmt->execute();
     $result = $stmt->get_result();

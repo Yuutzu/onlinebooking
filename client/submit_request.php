@@ -25,15 +25,15 @@ $totalPrice = floatval($data['totalPrice']);
 
 // Insert request into the database
 $sql = "INSERT INTO tbl_requests (items, total_price, special_request) VALUES (?, ?, ?)";
-$stmt = $conn->prepare($sql);
+$stmt = $mysqli->prepare($sql);
 $stmt->bind_param("sds", $items, $totalPrice, $specialRequest);
 
 if ($stmt->execute()) {
     echo json_encode(["status" => "success", "message" => "Your request has been successfully submitted!"]);
 } else {
-    echo json_encode(["status" => "error", "message" => "Error: " . $conn->error]);
+    echo json_encode(["status" => "error", "message" => "Error: " . $mysqli->error]);
 }
 
 $stmt->close();
-$conn->close();
+$mysqli->close();
 ?>
