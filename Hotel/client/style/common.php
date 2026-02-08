@@ -1,0 +1,339 @@
+<?php
+header("Content-type: text/css");
+include('../../admin/config/config.php'); // Adjust the path if needed
+
+// Fetch colors from the database
+$query = "SELECT site_bg_color, site_primary_color, site_hover_color FROM site_settings WHERE id = 0";
+$result = $mysqli->query($query);
+$colors = $result->fetch_assoc();
+
+// Default colors if not found in the database
+$bgColor = $colors['site_bg_color'] ?? '#ffffff'; // Default white
+$primaryColor = $colors['site_primary_color'] ?? '#4a1c1d'; // Default main color
+$hoverColor = $colors['site_hover_color'] ?? '#7a2e2e'; // Default sub color
+?>
+
+    :root {
+        --mainColor: <?php echo $primaryColor; ?>;
+        --subColor: <?php echo $hoverColor; ?>;
+        --bgColor: <?php echo $bgColor; ?>;
+    }
+
+    * {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+    }
+
+    body {
+        background-color: var(--bgColor);
+        overflow-x: hidden;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    #dashboard-menu {
+        position: fixed !important;
+        height: 100vh !important;
+        background-color: var(--mainColor) !important;
+        z-index: 20 !important;
+    }
+
+    .iicon {
+        font-size: 20px !important;
+        margin: 0 15px 0 0 !important;
+        padding: 0 !important;
+        position: relative !important;
+        bottom: 3px !important;
+    }
+
+    .iicon2 {
+        font-size: 16px !important;
+        margin: 5px;
+        padding: 0 !important;
+        position: relative !important;
+        bottom: 3px !important;
+    }
+
+    .prefFont {
+        font-size: 14px !important;
+    }
+
+    .nav-link {
+        font-size: 15px;
+        color: #1a1816;
+        border-radius: 8px;
+    }
+
+    .nav-link:hover {
+        background-color: var(--mainColor);
+        color: #fff;
+    }
+
+    .nav-link {
+        margin: 0 10px 0 0;
+    }
+
+    .main-item:hover {
+        background-color: var(--subColor) !important;
+        border-radius: 3px !important;
+    }
+
+    .sub-item:hover {
+        background-color: var(--subColor) !important;
+        border-radius: 3px !important;
+    }
+
+    .optionTitle {
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+        font-size: 11px !important;
+    }
+
+    .linkFont {
+        font-size: 13px !important;
+        text-decoration: none !important;
+    }
+
+    .linkFont:active {
+        color: #333333 !important;
+    }
+
+    .someText {
+        font-size: 13px !important;
+    }
+
+    thead,
+    th {
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        background-color: var(--mainColor);
+        color: #fff;
+    }
+
+    td {
+        font-weight: 400 !important;
+        font-size: 13px !important;
+    }
+
+    .btnAddCategory {
+        background-color: var(--mainColor);
+        border: 1 solid var(--mainColor);
+    }
+
+    .btnAddCategory:hover {
+        background-color: var(--subColor);
+        border: 1 solid var(--subColor);
+    }
+
+    #exampleModalLabel {
+        font-size: 14px !important;
+    }
+
+    .custom-alert {
+        position: fixed;
+        bottom: 20px;
+        /* Distance from the bottom of the screen */
+        left: 20px;
+        z-index: 1050;
+        display: flex;
+        align-items: center;
+        /* Ensure it's above other elements */
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--mainColor) !important;
+        /* Change background color for active state */
+        border-color: var(--mainColor) !important;
+        /* Change border color */
+        color: white !important;
+        /* Change text color */
+    }
+
+    .page-item .page-link {
+        border: 1px solid #ddd !important;
+        /* Customize border */
+        color: #353535 !important;
+        /* Text color on hover */
+    }
+
+    .page-item:hover .page-link {
+        background-color: var(--bgColor);
+        /* Background on hover */
+        color: #353535 !important;
+        /* Text color on hover */
+    }
+
+    .titleFont {
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .container-text-header {
+        background-color: var(--mainColor);
+        padding: 10px 5px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 300;
+        letter-spacing: 0.2px;
+    }
+
+    #client-content {
+        height: 100vh !important;
+    }
+
+    .card-register {
+        border: none;
+    }
+
+    .imageContainer {
+        width: 100%;
+        /* Set the container width */
+        height: 100%;
+        /* Set the container height */
+        display: flex;
+        /* Optional: for centering */
+        justify-content: center;
+        /* Optional: for centering */
+        align-items: center;
+        /* Optional: for centering */
+        overflow: hidden;
+        /* Prevent the image from overflowing */
+    }
+
+    .registerImage {
+        width: 100%;
+        /* Make the image fit the width */
+        height: 100%;
+        /* Make the image fit the height */
+        object-fit: cover;
+        /* Scale the image to cover the container */
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+    }
+
+    .topContainer {
+        background-color: var(--mainColor) !important;
+    }
+
+    .iconnav {
+        font-size: 20px !important;
+        padding: 0 !important;
+        position: relative !important;
+        bottom: 3px !important;
+        color: #fff;
+    }
+
+    .clientLoginButton {
+        background-color: transparent !important;
+        border-color: #fff;
+    }
+
+    .clientLoginButton:hover {
+        background-color: transparent !important;
+        border-color: #fabe6c;
+        color: #fabe6c;
+    }
+
+    .clientRegisterButton {
+        background-color: #fabe6c;
+        border-color: #fabe6c;
+        color: #1a1816;
+    }
+
+    .clientRegisterButton:hover {
+        background-color: transparent !important;
+        border-color: #fabe6c;
+        color: #fabe6c;
+    }
+
+    .mainNav {
+        padding: 10px 10px;
+        display: flex;
+        justify-content: space-between;
+        box-shadow: -2px 7px 5px -5px rgba(134, 134, 134, 0.75) !important;
+        background-color:  var(--bgColor);
+    }
+
+    .swiper-slide .image-container {
+        position: relative;
+        width: 100%;
+        height: 70vh;
+        /* Adjust the height to your preference */
+        overflow: hidden;
+    }
+
+    .swiper-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* Ensures the image fits properly */
+    }
+
+    .availabilityCheck {
+        z-index: 10 !important;
+        position: relative;
+        box-shadow: -2px 7px 5px -5px rgba(134, 134, 134, 0.75) !important;
+    }
+
+    .bigTitle {
+        font-size: 25px;
+        font-weight: 700;
+        margin: -10px 0 20px 0;
+        color: var(--mainColor);
+    }
+
+    .newBigTitle {
+        font-size: 25px;
+        font-weight: 700;
+        color: var(--mainColor);
+    }
+
+    .miniTitle {
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: var(--subColor);
+        text-transform: uppercase;
+    }
+
+    .contentPara {
+        font-size: 14px;
+    }
+
+    .cardRoomTitle {
+        font-size: 18px;
+        font-weight: 700;
+        margin: -15px 0 20px 0;
+        color: var(--mainColor);
+    }
+
+    .cardRoomDescription {
+        font-size: 13px;
+    }
+
+    .stick {
+        position: fixed;
+        z-index: 200;
+        width: 100%;
+    }
+
+    .mapcontent {
+        text-align: left !important;
+    }
+
+    .roomContainer {
+        height: 500px;
+        width: 500px;
+        border: 1px solid rgb(72, 72, 72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .flexibleDiv {
+        flex-direction: column;
+    }
