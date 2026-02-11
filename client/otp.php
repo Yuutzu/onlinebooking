@@ -82,17 +82,90 @@ if (isset($_POST["request"])) {
         $mail->addAddress($client_email, $client_name);
 
         $mail->isHTML(true);
-        $mail->Subject = 'Luxe Haven Team - One Time Password';
+        $mail->Subject = 'Luxe Haven Team - One-Time Password (OTP)';
         $mail->Body = "
-            Dear Mr./Ms./Mrs. $client_name, <br><br>
+           <html>
+        <head>
+            <style>
+                body {
+                    font-family: 'Arial', sans-serif;
+                    color: #333333;
+                    background-color: #f0eeeb;
+                    margin: 0;
+                    padding: 0;
+                }
+                .container {
+                    width: 100%;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #ffffff;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+                h1, h2, h3 {
+                    color: #4a1c1d;
+                }
+                p {
+                    font-size: 16px;
+                    line-height: 1.5;
+                    color: #555555;
+                }
+                b {
+                    color: #4a1c1d;
+                }
+                .footer {
+                    font-size: 12px;
+                    color: #888888;
+                    text-align: center;
+                }
+                .footer i {
+                    font-style: italic;
+                }
+                .otp-code {
+                    font-weight: bold;
+                    font-size: 22px;
+                    letter-spacing: 4px;
+                    color: #d9534f;
+                    background-color: #f8f8f8;
+                    padding: 10px 16px;
+                    border-radius: 4px;
+                    display: inline-block;
+                    margin: 8px 0 16px;
+                }
+                .highlight {
+                    color: #4a1c1d;
+                    font-weight: bold;
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <h2>Dear Mr./Ms./Mrs. $client_name,</h2>
 
-            <h3>Hello,</h3>
-            <p>Your one-time password (OTP) is: <strong>$otp</strong></p>
-            <p>This OTP is valid for the next 5 minutes. Do not share this code with anyone.</p>
-            <p>Thank you for choosing Luxe Haven Hotel.</p>
+                <p>Thank you for registering with <b>Luxe Haven Hotel</b>.</p>
 
-            ***<i>This is an auto-generated email. DO NOT REPLY.</i>***
-        ";
+                <p>Your One-Time Password (OTP) for account activation is:</p>
+
+                <p class='otp-code'>$otp</p>
+
+                <p>This code is valid for the next <span class='highlight'>5 minutes</span>. For your security, please do not share this OTP with anyone.</p>
+
+                <p>If you did not request this code, you may safely ignore this email.</p>
+
+                <br>
+
+                <p>Sincerely,</p>
+                <p><b>LUXE HAVEN HOTEL MANAGEMENT</b></p>
+
+                <br>
+                <div class='footer'>
+                    <p>***<i>This is an auto-generated email. DO NOT REPLY.</i>***</p>
+                </div>
+            </div>
+        </body>
+    </html>
+";
 
         $mail->send();
     } catch (Exception $e) {

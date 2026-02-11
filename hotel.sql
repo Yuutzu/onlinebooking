@@ -41,7 +41,10 @@ CREATE TABLE `clients` (
   `client_picture` varchar(255) NOT NULL,
   `failed_attempts` int(11) DEFAULT 0,
   `last_failed_attempt` timestamp NULL DEFAULT NULL,
-  `role` varchar(45) DEFAULT 'User'
+  `role` varchar(45) DEFAULT 'User',
+  `two_fa_enabled` TINYINT(1) DEFAULT 0 COMMENT '0=Disabled, 1=Enabled',
+  `two_fa_code` VARCHAR(10) DEFAULT NULL COMMENT 'Temporary verification code',
+  `two_fa_expiry` DATETIME DEFAULT NULL COMMENT 'Code expiration time'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

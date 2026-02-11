@@ -2,10 +2,10 @@
 session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
+include('../admin/inc/email_2fa_helper.php');
 require('../admin/inc/alert.php');
 
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
 require '../PHPMailer/PHPMailer/src/Exception.php';
@@ -19,11 +19,11 @@ if (isset($_POST['login'])) {
     $password = $_POST['client_password']; // No hashing
 
     // Check if the user exists (both Admin and User)
-    $query = "SELECT id, client_name, client_email, client_password, client_status, failed_attempts, role FROM clients WHERE client_email = ?";
+    $query = "SELECT id, client_name, client_email, client_password, client_status, failed_attempts, role, two_fa_enabled FROM clients WHERE client_email = ?";
     $stmt = $mysqli->prepare($query);
     $stmt->bind_param('s', $email);
     $stmt->execute();
-    $stmt->bind_result($id, $name, $result_email, $result_password, $status, $failed_attempts, $role);
+    $stmt->bind_result($id, $name, $result_email, $result_password, $status, $failed_attempts, $role, $two_fa_enabled);
     $stmt->fetch();
     $stmt->close();
 
@@ -34,7 +34,7 @@ if (isset($_POST['login'])) {
                 $_SESSION['admin_id'] = $id;
                 $_SESSION['admin_name'] = $name;
                 $_SESSION['admin_email'] = $result_email;
-                
+
                 echo "<script>
                     window.location.href = '../admin/dashboard.php';
                 </script>";
@@ -58,14 +58,35 @@ if (isset($_POST['login'])) {
                 $stmt->execute();
                 $stmt->close();
 
-                $_SESSION['client_id'] = $id;
-                $_SESSION['client_name'] = $name;
-                $_SESSION['client_email'] = $result_email;
-
+                // Check if user has pending OTP verification
                 if ($status === "Pending") {
+                    $_SESSION['client_id'] = $id;
+                    $_SESSION['client_name'] = $name;
+                    $_SESSION['client_email'] = $result_email;
                     header("location: otp.php");
                     exit();
                 }
+
+                // Check if 2FA is enabled for activated accounts
+                if ($status === "Activated" && $two_fa_enabled == 1) {
+                    // Generate and send 2FA code
+                    $code = generateEmailCode();
+
+                    if (store2FACode($mysqli, $id, $code) && sendEmail2FACode($result_email, $name, $code)) {
+                        // Store user ID in session for 2FA verification
+                        $_SESSION['2fa_user_id'] = $id;
+                        header("location: verify_email_2fa.php");
+                        exit();
+                    } else {
+                        alert("error", "Failed to send verification code. Please try again.");
+                        exit();
+                    }
+                }
+
+                // Normal login - set session variables
+                $_SESSION['client_id'] = $id;
+                $_SESSION['client_name'] = $name;
+                $_SESSION['client_email'] = $result_email;
 
                 if ($status === "Activated") {
                     header("location: index.php");
@@ -141,23 +162,29 @@ if (isset($_POST['login'])) {
 
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Email Address</label>
-                                            <input type="email" name="client_email" class="form-control someText shadow-none" required>
+                                            <input type="email" name="client_email"
+                                                class="form-control someText shadow-none" required>
                                         </div>
 
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Password</label>
-                                            <input type="password" name="client_password" class="form-control someText shadow-none" required>
+                                            <input type="password" name="client_password"
+                                                class="form-control someText shadow-none" required>
                                         </div>
 
                                         <div class="mb-2 d-grid mt-3">
-                                            <button type="submit" name="login" class="btn btn-primary btnAddCategory someText">Login</button>
+                                            <button type="submit" name="login"
+                                                class="btn btn-primary btnAddCategory someText">Login</button>
                                         </div>
                                     </form>
 
                                     <!-- Forgot Password and Register Buttons -->
                                     <div class="d-flex justify-content-between mt-3">
-                                        <a href="forgot_password.php" style="font-size: 1rem; color: #4a1c1d; text-decoration: none; padding-top: 5px;">Forgot Password?</a>
-                                        <a href="register.php" style="font-size: 1rem; color: #4a1c1d; text-decoration: none; padding-top: 5px;">Register</a>
+                                        <a href="forgot_password.php"
+                                            style="font-size: 1rem; color: #4a1c1d; text-decoration: none; padding-top: 5px;">Forgot
+                                            Password?</a>
+                                        <a href="register.php"
+                                            style="font-size: 1rem; color: #4a1c1d; text-decoration: none; padding-top: 5px;">Register</a>
                                     </div>
                                 </div>
                             </div>
@@ -176,4 +203,3 @@ if (isset($_POST['login'])) {
 </body>
 
 </html>
-

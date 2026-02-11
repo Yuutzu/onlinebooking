@@ -1,0 +1,58 @@
+Chapter 1 — Introduction
+
+Overview of the System
+
+The Luxe Haven Hotel Management System is a web-based application that centralizes hotel operations for both administrators and guests. It manages room inventory, reservations (online and walk-in), client profiles and identity verification, product and service catalogs (e.g., food and beverages), inquiries and requests, payments and reporting, and document generation (PDF receipts, invoices, and reports). The system aims to reduce manual workloads, minimize booking conflicts, and provide an auditable, user-friendly interface for daily hotel operations.
+
+Background of the Study
+
+Traditional hotel operations rely heavily on manual records (paper logs, spreadsheets, phone calls) which are prone to human error, double bookings, lost paperwork, and slow response times. The studied hotel requires an integrated solution that supports online reservation, client account management, and administrative oversight while maintaining data confidentiality and operational reliability. The system also needs to address common web security risks to protect client data and maintain service availability.
+
+Statement of the Problem
+
+The hotel faces the following key problems:
+
+- Manual booking and record-keeping cause scheduling conflicts and inefficiencies.
+- Client data and reservation records are difficult to consolidate and report on.
+- The existing processes lack automation for payments, product management, and document generation.
+- Current digital implementations often expose security weaknesses (insecure password handling, credentials in source code, unsafe file uploads, SQL injection risks, and missing CSRF/session protections), which could lead to unauthorized access and data breaches.
+ 
+Objectives
+
+General Objective
+
+To implement a secure, reliable, and user-friendly web-based hotel management system that streamline operations for clients and administrators.
+ 
+
+
+
+
+
+Specific Objectives
+
+- Build modules for room management, reservation processing, client management, products and services, and administrative reporting.
+- Provide a responsive client interface for browsing rooms, checking availability, and booking online.
+- Implement secure authentication and account recovery flows (hashed passwords, secure reset tokens).
+- Replace inline SQL with parameterized prepared statements to prevent SQL injection.
+- Harden file upload handling with MIME checks, safe filenames, and storage policies.
+- Move sensitive credentials to environment variables and remove hard-coded secrets from source code.
+- Add CSRF protection and session hardening (cookie flags, session regeneration) for all state-changing actions.
+- Generate accurate PDF invoices and exportable reports for administration and clients.
+ 
+Scope and Limitations
+
+Scope
+
+- The system covers client-facing booking, profile management, and basic payment reference submission.
+- Administrative features include room, reservation, client, product/service management, site settings, and PDF generation.
+- Email notifications (registration, password reset via secure links/OTP) and PDF generation are included.
+- Security controls (password hashing, prepared statements, file upload validation, CSRF tokens, session cookie hardening) will be implemented as part of the development scope.
+ 
+ 
+ 
+Limitations
+
+- Direct third-party payment gateway integration (credit card processors) is not included in this release; payment processing is handled via offline/mobile reference submission.
+- The system requires HTTPS and a properly configured SMTP provider for secure email delivery; these are environments and infrastructure prerequisites.
+- Complete penetration testing and continuous monitoring are recommended but fall outside the immediate development scope (can be planned as follow-up engagement).
+
