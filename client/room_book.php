@@ -3,12 +3,7 @@ session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
 require('../admin/inc/alert.php');
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-require '../PHPMailer/PHPMailer/src/Exception.php';
-require '../PHPMailer/PHPMailer/src/PHPMailer.php';
-require '../PHPMailer/PHPMailer/src/SMTP.php';
+require_once('../admin/inc/mailer_helper.php');
 
 $room_id = $_GET['room_id'];
 $client_id = $_SESSION['client_id'];
@@ -79,19 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_payment'])) {
 
         // Send email confirmation
         try {
-            $mail = new PHPMailer(true);
-            $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
-            $mail->SMTPAuth = true;
-            $mail->Username = 'luxehavenmariott@gmail.com';
-            $mail->Password = 'nufq zebo yjow cobb';
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
-
-            $mail->setFrom($hotel_email, "$hotel_name Team");
+            $mail = getMailer("$hotel_name Team");
             $mail->addAddress($client_email, $client_name);
-
-            $mail->isHTML(true);
             $mail->Subject = "Reservation Confirmation - $hotel_name";
             $mail->Body = "
             <html>

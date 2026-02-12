@@ -1,16 +1,9 @@
 <?php
 session_start();
-include('../admin/config/config.php');
-include('../admin/config/checklogin.php');
-include('../admin/inc/email_2fa_helper.php');
-require('../admin/inc/alert.php');
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-require '../PHPMailer/PHPMailer/src/Exception.php';
-require '../PHPMailer/PHPMailer/src/PHPMailer.php';
-require '../PHPMailer/PHPMailer/src/SMTP.php';
+include_once('../admin/config/config.php');
+include_once('../admin/config/checklogin.php');
+include_once('../admin/inc/email_2fa_helper.php');
+require_once('../admin/inc/alert.php');
 
 // Ensure user is logged in
 if (!isset($_SESSION['client_id'])) {

@@ -3,14 +3,7 @@ session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
 require('../admin/inc/alert.php');
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-
-require '../PHPMailer/PHPMailer/src/Exception.php';
-require '../PHPMailer/PHPMailer/src/PHPMailer.php';
-require '../PHPMailer/PHPMailer/src/SMTP.php';
+require_once('../admin/inc/mailer_helper.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['verify_email'])) {
@@ -34,19 +27,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Send OTP via email
             try {
-                $mail = new PHPMailer(true);
-                $mail->isSMTP();
-                $mail->Host = 'smtp.gmail.com';
-                $mail->SMTPAuth = true;
-                $mail->Username = 'luxehavenmariott@gmail.com';
-                $mail->Password = 'nufq zebo yjow cobb';
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port = 587;
-
-                $mail->setFrom('luxehavenmariott@gmail.com', 'Luxe Haven Hotel PH Team');
+                $mail = getMailer();
                 $mail->addAddress($client_email, $client_name);
-
-                $mail->isHTML(true);
                 $mail->Subject = 'Luxe Haven Hotel - Password Reset OTP';
                 $mail->Body = "
                     Dear $client_name, <br><br>

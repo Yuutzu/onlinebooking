@@ -1,8 +1,8 @@
 <?php
 session_start();
-include('../admin/config/config.php');
-include('../admin/inc/email_2fa_helper.php');
-require('../admin/inc/alert.php');
+include_once('../admin/config/config.php');
+include_once('../admin/inc/email_2fa_helper.php');
+require_once('../admin/inc/alert.php');
 
 // Check if user is in 2FA verification state
 if (!isset($_SESSION['2fa_user_id'])) {
