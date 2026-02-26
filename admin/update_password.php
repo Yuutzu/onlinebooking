@@ -2,6 +2,7 @@
 session_start();
 include('./config/config.php');
 include('./config/checklogin.php');
+include_once('./inc/password_helper.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $client_id = $_POST['client_id'];
@@ -18,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Fetch the stored password (Plain Text)
+    // Fetch the stored password hash
     $stmt = $mysqli->prepare("SELECT client_password FROM clients WHERE id = ?");
     $stmt->bind_param("i", $client_id);
     $stmt->execute();
@@ -26,8 +27,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->fetch();
     $stmt->close();
 
-    // Verify current password (Plain Text Comparison)
-    if ($current_password !== $stored_password) {
+    // Verify current password using secure hashing
+    if (!verifyPassword($current_password, $stored_password)) {
         echo "<script>
             alert('Current password is incorrect!');
             window.location.href='admin_accounts.php';
@@ -44,9 +45,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Update password in the database (Plain Text)
+    // Hash the new password before storage
+    $hashed_password = hashPassword($new_password);
+
+    // Update password in the database with hashed value
     $update_stmt = $mysqli->prepare("UPDATE clients SET client_password = ? WHERE id = ?");
-    $update_stmt->bind_param("si", $new_password, $client_id);
+    $update_stmt->bind_param("si", $hashed_password, $client_id);
 
     if ($update_stmt->execute()) {
         echo "<script>

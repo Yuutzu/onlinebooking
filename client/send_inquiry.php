@@ -7,16 +7,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $inquiry = trim($_POST['message']);
-    
+
     $date = date("Y-m-d");
     $time = date("H:i:s");
     $status = "Pending"; // Default status
     $remarks = ""; // Default remarks
 
-    // Generate a unique 6-digit inquiry_id
-    function generateInquiryID($mysqli) {
+    // Generate a unique inquiry_id using cryptographically secure random bytes
+    function generateInquiryID($mysqli)
+    {
         do {
-            $inquiry_id = rand(100000, 999999); // Generate a random 6-digit number
+            // Generate secure random number with higher entropy than rand()
+            $inquiry_id = str_pad(hexdec(bin2hex(random_bytes(3))) % 1000000, 6, '0', STR_PAD_LEFT);
             $stmt = $mysqli->prepare("SELECT inquiry_id FROM inquiry WHERE inquiry_id = ?");
             $stmt->bind_param("i", $inquiry_id);
             $stmt->execute();
@@ -44,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         $stmt = $mysqli->prepare("INSERT INTO inquiry (inquiry_id, date, time, name, email, inquiry, remarks, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("isssssss", $inquiry_id, $date, $time, $name, $email, $inquiry, $remarks, $status);
-        
+
         if ($stmt->execute()) {
             echo json_encode(["status" => "success"]);
         } else {

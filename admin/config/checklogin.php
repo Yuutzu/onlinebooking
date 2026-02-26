@@ -2,10 +2,8 @@
 function check_login()
 {
     if (strlen($_SESSION['admin_id']) == 0) {
-        $host = $_SERVER['HTTP_HOST'];
-        $uri  = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-        $extra = "index.php";
         $_SESSION["admin_id"] = "";
-        header("Location: http://$host$uri/$extra");
+        // Use relative path instead of building from $_SERVER to prevent open redirect
+        header("Location: /client/login.php");
     }
 }

@@ -71,8 +71,8 @@ if (isset($_POST['login'])) {
 
                 // Check if user has pending OTP verification
                 if ($status === "Pending") {
-                    // Create session with OTP data
-                    $otp = rand(100000, 999999);
+                    // Create session with OTP data using cryptographically secure random
+                    $otp = str_pad(hexdec(bin2hex(random_bytes(3))) % 1000000, 6, '0', STR_PAD_LEFT);
                     SessionManager::create($id, $name, [
                         'client_id' => $id,
                         'client_name' => $name,

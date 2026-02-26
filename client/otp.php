@@ -53,8 +53,8 @@ if (isset($_POST['Activate'])) {
 }
 
 if (isset($_POST["request"])) {
-    // Generate OTP
-    $otp = rand(100000, 999999);
+    // Generate OTP using cryptographically secure random bytes
+    $otp = str_pad(hexdec(bin2hex(random_bytes(3))) % 1000000, 6, '0', STR_PAD_LEFT);
     // Store the OTP in the session
     $_SESSION['otp'] = $otp;
     // Optionally, store the OTP expiry time (e.g., 5 minutes from now)

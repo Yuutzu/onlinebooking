@@ -7,17 +7,25 @@ require('../admin/inc/alert.php');
 require_once('../admin/inc/mailer_helper.php');
 
 // Track password reset attempts (rate limiting)
-$reset_attempts_key = 'reset_attempts_' . md5($_SERVER['REMOTE_ADDR']);
+$reset_attempts_key = 'reset_attempts_' . hash('sha256', $_SERVER['REMOTE_ADDR']);
 $reset_attempts = isset($_SESSION[$reset_attempts_key]) ? $_SESSION[$reset_attempts_key] : 0;
+$last_attempt_time = isset($_SESSION[$reset_attempts_key . '_time']) ? $_SESSION[$reset_attempts_key . '_time'] : 0;
+
+// Reset attempts if 1 hour has passed
+if (time() - $last_attempt_time > 3600) {
+    $reset_attempts = 0;
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['verify_email'])) {
         $client_email = $_POST['client_email'];
+        $default_message = 'If this email is registered, you will receive a password reset link shortly.';
 
         // Rate limiting: Max 3 reset requests per hour
         if ($reset_attempts >= 3) {
-            alert('error', 'Too many password reset attempts. Please try again after 1 hour.');
-            $_SESSION['step'] = 'rate_limited';
+            // Don't reveal if rate limited - return same generic message
+            alert('success', $default_message);
+            $_SESSION['step'] = 'check_email';
         } else {
             // Check if email exists in the database
             $stmt = $mysqli->prepare("SELECT id, client_name FROM clients WHERE client_email = ?");

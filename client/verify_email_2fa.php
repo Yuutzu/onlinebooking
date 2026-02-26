@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once('../admin/inc/SessionManager.php');
+SessionManager::init();
+
 include_once('../admin/config/config.php');
 include_once('../admin/inc/email_2fa_helper.php');
 require_once('../admin/inc/alert.php');
@@ -34,10 +36,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_code'])) {
         // Code is valid - complete login
         clear2FACode($mysqli, $user_id);
 
-        // Set session variables
-        $_SESSION['client_id'] = $user_id;
-        $_SESSION['client_name'] = $user->client_name;
-        $_SESSION['client_email'] = $user->client_email;
+        // Use SessionManager for secure session handling
+        SessionManager::create($user_id, $user->client_name, [
+            'client_id' => $user_id,
+            'client_name' => $user->client_name,
+            'client_email' => $user->client_email
+        ]);
 
         // Clear 2FA session variable
         unset($_SESSION['2fa_user_id']);
