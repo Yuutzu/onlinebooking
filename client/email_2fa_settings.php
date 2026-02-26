@@ -585,17 +585,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="how-it-works">
                                 <p class="someText mb-3 fw-bold" style="font-size: 16px; color: var(--mainColor, #4a1c1d);">How
                                     it works:</p>
-                                <p class="someText">📌 Step 1: Click "Enable 2FA" below</p>
-                                <p class="someText">📧 Step 2: We'll send a test code to your email</p>
+                                <p class="someText">📌 Step 1: Click "Enable 2FA" below or send a test code</p>
+                                <p class="someText">📧 Step 2: We'll send a verification code to your email</p>
                                 <p class="someText">✓ Step 3: Enter the code to activate 2FA</p>
                                 <p class="someText mb-0">🔐 Step 4: You'll need a code each time you log in</p>
                             </div>
 
-                            <form method="POST">
-                                <button type="submit" name="enable_2fa"
-                                    class="btn btn-primary btnAddCategory someText w-100 fw-600"
+                            <form method="POST" class="twofa-actions-inline">
+                                <button type="submit" name="enable_2fa" class="btn btn-primary btnAddCategory someText fw-600"
+                                    style="padding: 12px; font-size: 16px; flex-grow: 1;">
+                                    🔒 Enable 2FA
+                                </button>
+                                <button type="submit" name="send_test_code"
+                                    class="btn btn-outline-secondary btn-primary-twofa someText fw-600"
                                     style="padding: 12px; font-size: 16px;">
-                                    🔒 Enable Two-Factor Authentication
+                                    📧 Send Test Code
                                 </button>
                             </form>
                         <?php endif; ?>

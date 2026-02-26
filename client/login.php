@@ -3,7 +3,9 @@ session_start();
 include_once('../admin/config/config.php');
 include_once('../admin/config/checklogin.php');
 include_once('../admin/inc/email_2fa_helper.php');
+include_once('../admin/inc/password_helper.php');
 require_once('../admin/inc/alert.php');
+require_once('../admin/inc/mailer_helper.php');
 
 $max_attempts = 3; // Number of allowed failed attempts
 
@@ -21,7 +23,18 @@ if (isset($_POST['login'])) {
     $stmt->close();
 
     if ($result_email) {
-        if ($result_password === $password) { // Direct comparison (no hashing)
+        // Verify password using secure hashing
+        if (verifyPassword($password, $result_password)) {
+            // Check if password needs rehashing (for upgraded algorithms)
+            if (passwordNeedsRehash($result_password)) {
+                $newHash = hashPassword($password);
+                $updateQuery = "UPDATE clients SET client_password = ? WHERE id = ?";
+                $stmt = $mysqli->prepare($updateQuery);
+                $stmt->bind_param('si', $newHash, $id);
+                $stmt->execute();
+                $stmt->close();
+            }
+
             if ($role === "Admin") {
                 // Admin Login (No blocking applied)
                 $_SESSION['admin_id'] = $id;
@@ -56,6 +69,104 @@ if (isset($_POST['login'])) {
                     $_SESSION['client_id'] = $id;
                     $_SESSION['client_name'] = $name;
                     $_SESSION['client_email'] = $result_email;
+
+                    // Generate and send OTP immediately
+                    $otp = rand(100000, 999999);
+                    $_SESSION['otp'] = $otp;
+                    $_SESSION['otp_expiry'] = time() + (5 * 60); // Valid for 5 minutes
+
+                    try {
+                        $mail = getMailer();
+                        $mail->addAddress($result_email, $name);
+                        $mail->Subject = 'Luxe Haven Team - One-Time Password (OTP)';
+                        $mail->Body = "
+                           <html>
+                        <head>
+                            <style>
+                                body {
+                                    font-family: 'Arial', sans-serif;
+                                    color: #333333;
+                                    background-color: #f0eeeb;
+                                    margin: 0;
+                                    padding: 0;
+                                }
+                                .container {
+                                    width: 100%;
+                                    max-width: 600px;
+                                    margin: 0 auto;
+                                    padding: 20px;
+                                    background-color: #ffffff;
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                                }
+                                h1, h2, h3 {
+                                    color: #4a1c1d;
+                                }
+                                p {
+                                    font-size: 16px;
+                                    line-height: 1.5;
+                                    color: #555555;
+                                }
+                                b {
+                                    color: #4a1c1d;
+                                }
+                                .footer {
+                                    font-size: 12px;
+                                    color: #888888;
+                                    text-align: center;
+                                }
+                                .footer i {
+                                    font-style: italic;
+                                }
+                                .otp-code {
+                                    font-weight: bold;
+                                    font-size: 22px;
+                                    letter-spacing: 4px;
+                                    color: #d9534f;
+                                    background-color: #f8f8f8;
+                                    padding: 10px 16px;
+                                    border-radius: 4px;
+                                    display: inline-block;
+                                    margin: 8px 0 16px;
+                                }
+                                .highlight {
+                                    color: #4a1c1d;
+                                    font-weight: bold;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <h2>Dear Mr./Ms./Mrs. $name,</h2>
+
+                                <p>Thank you for registering with <b>Luxe Haven Hotel</b>.</p>
+
+                                <p>Your One-Time Password (OTP) for account activation is:</p>
+
+                                <p class='otp-code'>$otp</p>
+
+                                <p>This code is valid for the next <span class='highlight'>5 minutes</span>. For your security, please do not share this OTP with anyone.</p>
+
+                                <p>If you did not request this code, you may safely ignore this email.</p>
+
+                                <br>
+
+                                <p>Sincerely,</p>
+                                <p><b>LUXE HAVEN HOTEL MANAGEMENT</b></p>
+
+                                <br>
+                                <div class='footer'>
+                                    <p>***<i>This is an auto-generated email. DO NOT REPLY.</i>***</p>
+                                </div>
+                            </div>
+                        </body>
+                    </html>
+";
+                        $mail->send();
+                    } catch (Exception $e) {
+                        // Log error but don't stop the flow, user can request OTP again
+                    }
+
                     header("location: otp.php");
                     exit();
                 }

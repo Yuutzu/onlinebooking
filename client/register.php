@@ -2,6 +2,7 @@
 session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
+include_once('../admin/inc/password_helper.php');
 require('../admin/inc/alert.php');
 require_once('../admin/inc/mailer_helper.php');
 
@@ -29,6 +30,9 @@ if (isset($_POST['register'])) {
     $client_id_number = $_POST['client_id_number'];
     $password = $temp_pass;
     $client_status = "Pending";
+
+    // Hash the temporary password before storing
+    $hashed_password = hashPassword($password);
 
     try {
         $mail = getMailer();
@@ -122,7 +126,7 @@ if (isset($_POST['register'])) {
     $insertClientQuery = "INSERT INTO clients (client_id, client_name, client_presented_id, client_id_picture, client_id_number, client_phone, client_email, client_password, client_status) VALUES (?,?,?,?,?,?,?,?,?)";
     $stmt2 = $mysqli->prepare($insertClientQuery);
     //bind paramaters
-    $rc = $stmt2->bind_param('sssssssss', $client_id, $client_name, $client_presented_id, $client_id_picture, $client_id_number, $client_phone, $client_email, $password, $client_status);
+    $rc = $stmt2->bind_param('sssssssss', $client_id, $client_name, $client_presented_id, $client_id_picture, $client_id_number, $client_phone, $client_email, $hashed_password, $client_status);
 
     if ($stmt2->execute()) {
         echo "<script>

@@ -60,6 +60,17 @@ if (isset($_POST['resend_code'])) {
         $error = "Failed to send verification code. Please try again.";
     }
 }
+
+// Handle send test code
+if (isset($_POST['send_test_code'])) {
+    $newCode = generateEmailCode();
+
+    if (store2FACode($mysqli, $user_id, $newCode) && sendEmail2FACode($user->client_email, $user->client_name, $newCode)) {
+        $success = "Test verification code sent successfully to " . htmlspecialchars($user->client_email) . ". Check your email!";
+    } else {
+        $error = "Failed to send test code. Please try again.";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -122,10 +133,19 @@ if (isset($_POST['resend_code'])) {
                         </form>
 
                         <form method="POST" class="mt-2">
-                            <div class="d-grid">
-                                <button type="submit" name="resend_code" class="btn btn-outline-secondary someText">
-                                    Resend Code
-                                </button>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button type="submit" name="resend_code"
+                                        class="btn btn-outline-secondary someText w-100">
+                                        Resend Code
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button type="submit" name="send_test_code"
+                                        class="btn btn-outline-info someText w-100">
+                                        Test Send
+                                    </button>
+                                </div>
                             </div>
                         </form>
 

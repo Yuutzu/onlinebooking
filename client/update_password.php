@@ -2,6 +2,8 @@
 session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
+include_once('../admin/inc/password_helper.php');
+require_once('../admin/inc/alert.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $client_id = $_POST['client_id'];
@@ -11,55 +13,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Check if any field is empty
     if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
-        echo "<script>
-            alert('All fields are required!');
-            window.location.href='profile.php';
-        </script>";
-        exit();
-    }
-
-    // Fetch the stored password (Plain Text)
-    $stmt = $mysqli->prepare("SELECT client_password FROM clients WHERE id = ?");
-    $stmt->bind_param("i", $client_id);
-    $stmt->execute();
-    $stmt->bind_result($stored_password);
-    $stmt->fetch();
-    $stmt->close();
-
-    // Verify current password (Plain Text Comparison)
-    if ($current_password !== $stored_password) {
-        echo "<script>
-            alert('Current password is incorrect!');
-            window.location.href='profile.php';
-        </script>";
+        alert('error', 'All fields are required!');
+        echo "<script>window.location.href='profile.php';</script>";
         exit();
     }
 
     // Check if new password and confirm password match
     if ($new_password !== $confirm_password) {
-        echo "<script>
-            alert('New password and Confirm password do not match!');
-            window.location.href='profile.php';
-        </script>";
+        alert('error', 'New password and confirm password do not match!');
+        echo "<script>window.location.href='profile.php';</script>";
         exit();
     }
 
-    // Update password in the database (Plain Text)
-    $update_stmt = $mysqli->prepare("UPDATE clients SET client_password = ? WHERE id = ?");
-    $update_stmt->bind_param("si", $new_password, $client_id);
+    // Use the secure password update function
+    $result = updatePassword($mysqli, $client_id, $current_password, $new_password);
 
-    if ($update_stmt->execute()) {
-        echo "<script>
-            alert('Password updated successfully!');
-            window.location.href='profile.php';
-        </script>";
+    if ($result['success']) {
+        alert('success', $result['message']);
+        echo "<script>window.location.href='profile.php';</script>";
     } else {
-        echo "<script>
-            alert('Something went wrong. Please try again!');
-            window.location.href='profile.php';
-        </script>";
+        alert('error', $result['message']);
+        echo "<script>window.location.href='profile.php';</script>";
     }
-    $update_stmt->close();
     exit();
 }
 ?>

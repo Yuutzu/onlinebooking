@@ -2,90 +2,178 @@
 session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
+include_once('../admin/inc/password_helper.php');
 require('../admin/inc/alert.php');
 require_once('../admin/inc/mailer_helper.php');
+
+// Track password reset attempts (rate limiting)
+$reset_attempts_key = 'reset_attempts_' . md5($_SERVER['REMOTE_ADDR']);
+$reset_attempts = isset($_SESSION[$reset_attempts_key]) ? $_SESSION[$reset_attempts_key] : 0;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['verify_email'])) {
         $client_email = $_POST['client_email'];
 
-        // Check if email exists in the database
-        $stmt = $mysqli->prepare("SELECT id, client_name FROM clients WHERE client_email = ?");
-        $stmt->bind_param('s', $client_email);
-        $stmt->execute();
-        $stmt->store_result();
-        $stmt->bind_result($client_id, $client_name);
-
-        if ($stmt->num_rows > 0) {
-            $stmt->fetch();
-
-            // Generate OTP (6-digit code)
-            $otp = rand(100000, 999999);
-            $_SESSION['otp'] = $otp;
-            $_SESSION['otp_email'] = $client_email;
-            $_SESSION['client_id'] = $client_id;
-
-            // Send OTP via email
-            try {
-                $mail = getMailer();
-                $mail->addAddress($client_email, $client_name);
-                $mail->Subject = 'Luxe Haven Hotel - Password Reset OTP';
-                $mail->Body = "
-                    Dear $client_name, <br><br>
-                    Your One-Time Password (OTP) for password reset is: <b>$otp</b><br><br>
-                    Please enter this OTP on the password reset page.<br><br>
-                    If you did not request this, please ignore this email.<br><br>
-                    Sincerely,<br>
-                    Luxe Haven Hotel Team<br>
-                    ***<i>This is an auto-generated email. DO NOT REPLY.</i>***
-                ";
-
-                $mail->send();
-                alert('success', 'An OTP has been sent to your email. Please check your inbox.');
-
-                $_SESSION['step'] = 'verify_otp';
-            } catch (Exception $e) {
-                alert('error', 'Email could not be sent.');
-            }
+        // Rate limiting: Max 3 reset requests per hour
+        if ($reset_attempts >= 3) {
+            alert('error', 'Too many password reset attempts. Please try again after 1 hour.');
+            $_SESSION['step'] = 'rate_limited';
         } else {
-            alert('error', 'No account found with that email address.');
-        }
-    }
+            // Check if email exists in the database
+            $stmt = $mysqli->prepare("SELECT id, client_name FROM clients WHERE client_email = ?");
+            $stmt->bind_param('s', $client_email);
+            $stmt->execute();
+            $stmt->store_result();
+            $stmt->bind_result($client_id, $client_name);
 
-    if (isset($_POST['verify_otp'])) {
-        $entered_otp = $_POST['otp'];
+            if ($stmt->num_rows > 0) {
+                $stmt->fetch();
 
-        if ($_SESSION['otp'] == $entered_otp) {
-            alert('success', 'OTP Verified! You can now enter a new password.');
-            $_SESSION['step'] = 'reset_password';
-        } else {
-            alert('error', 'Invalid OTP. Please try again.');
-        }
-    }
+                // Generate secure reset token
+                $token = generatePasswordResetToken($mysqli, $client_id);
 
-    if (isset($_POST['update_password'])) {
-        $new_password = $_POST['new_password'];
-        $confirm_password = $_POST['confirm_password'];
-        $client_id = $_SESSION['client_id'];
+                if ($token) {
+                    // Build reset link
+                    $reset_url = "http" . (isset($_SERVER['HTTPS']) ? "s" : "") . "://" . $_SERVER['HTTP_HOST'] . "/client/reset_password_token.php?token=" . urlencode($token) . "&user=" . urlencode($client_id);
 
-        if ($new_password === $confirm_password) {
-            // Update password (not hashed as per your request)
-            $stmt = $mysqli->prepare("UPDATE clients SET client_password = ? WHERE id = ?");
-            $stmt->bind_param('si', $new_password, $client_id);
-            if ($stmt->execute()) {
-                echo "<script>
-                    alert('Your password has been updated. You can now log in.');
-                    window.location.href = 'login.php';
-                </script>";
-                session_destroy(); // Clear session data
-                exit();
+                    // Send reset link via email
+                    try {
+                        $mail = getMailer();
+                        $mail->addAddress($client_email, $client_name);
+                        $mail->Subject = 'Luxe Haven Hotel - Password Reset Link';
+                        $mail->Body = "
+                        <html>
+                        <head>
+                            <style>
+                                body {
+                                    font-family: 'Arial', sans-serif;
+                                    color: #333333;
+                                    background-color: #f0eeeb;
+                                    margin: 0;
+                                    padding: 0;
+                                }
+                                .container {
+                                    width: 100%;
+                                    max-width: 600px;
+                                    margin: 0 auto;
+                                    padding: 20px;
+                                    background-color: #ffffff;
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                                }
+                                h1, h2, h3 {
+                                    color: #4a1c1d;
+                                }
+                                p {
+                                    font-size: 16px;
+                                    line-height: 1.5;
+                                    color: #555555;
+                                }
+                                b {
+                                    color: #4a1c1d;
+                                }
+                                .reset-button {
+                                    display: inline-block;
+                                    background-color: #4a1c1d;
+                                    color: white;
+                                    padding: 12px 24px;
+                                    border-radius: 5px;
+                                    text-decoration: none;
+                                    margin: 20px 0;
+                                }
+                                .reset-button:hover {
+                                    background-color: #3a1419;
+                                }
+                                .warning {
+                                    background-color: #fff3cd;
+                                    border: 1px solid #ffc107;
+                                    padding: 10px;
+                                    border-radius: 4px;
+                                    margin: 15px 0;
+                                }
+                                .footer {
+                                    font-size: 12px;
+                                    color: #888888;
+                                    text-align: center;
+                                    margin-top: 30px;
+                                }
+                                .footer i {
+                                    font-style: italic;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <h2>Dear Mr./Ms./Mrs. $client_name,</h2>
+
+                                <p>We received a request to reset your <b>Luxe Haven Hotel</b> account password.</p>
+
+                                <p><strong>Click the link below to reset your password:</strong></p>
+
+                                <p>
+                                    <a href='$reset_url' class='reset-button'>Reset Password</a>
+                                </p>
+
+                                <div class='warning'>
+                                    <strong>⚠️ Security Note:</strong><br>
+                                    This link is valid for <b>1 hour only</b>. After that, you'll need to request a new password reset.<br>
+                                    Never share this link with anyone.
+                                </div>
+
+                                <p>Or copy and paste this link in your browser:</p>
+                                <p style='word-break: break-all; background-color: #f8f8f8; padding: 10px; border-radius: 4px;'>
+                                    $reset_url
+                                </p>
+
+                                <p>If you didn't request this password reset, please ignore this email and your password will remain unchanged.</p>
+
+                                <p>If you have any questions, contact our support team.</p>
+
+                                <br>
+
+                                <p>Sincerely,</p>
+                                <p><b>LUXE HAVEN HOTEL MANAGEMENT</b></p>
+
+                                <div class='footer'>
+                                    <p>***<i>This is an auto-generated email. DO NOT REPLY.</i>***</p>
+                                </div>
+                            </div>
+                        </body>
+                    </html>
+";
+                        $mail->send();
+
+                        // Increment reset attempts
+                        $_SESSION[$reset_attempts_key] = $reset_attempts + 1;
+
+                        alert('success', 'A password reset link has been sent to your email. Please check your inbox. The link is valid for 1 hour.');
+                        $_SESSION['email_verified'] = $client_email;
+                        $_SESSION['step'] = 'check_email';
+                    } catch (Exception $e) {
+                        alert('error', 'Failed to send reset email. Please try again later.');
+                        error_log("Password reset email error: " . $e->getMessage());
+                    }
+                } else {
+                    alert('error', 'Error generating reset token. Please try again.');
+                }
             } else {
-                alert('error', 'Error updating password.');
+                // Don't reveal if email exists (security)
+                alert('success', 'If an account exists with that email, you will receive a password reset link shortly.');
+                $_SESSION['step'] = 'check_email';
             }
-        } else {
-            alert('error', 'Passwords do not match.');
+            $stmt->close();
         }
     }
+}
+
+// Clear rate limiting after 1 hour
+if (isset($_SESSION['reset_attempts_timestamp'])) {
+    if (time() - $_SESSION['reset_attempts_timestamp'] > 3600) {
+        unset($_SESSION[$reset_attempts_key]);
+        $reset_attempts = 0;
+    }
+} else {
+    $_SESSION['reset_attempts_timestamp'] = time();
 }
 ?>
 
@@ -112,15 +200,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
 
                                 <div class="container mt-4 mb-4">
-                                    <h5 class="titleFont mb-0">Forgot Password</h5>
+                                    <h5 class="titleFont mb-0">Reset Your Password</h5>
                                     <p class="someText">
                                         <?php
-                                        if (!isset($_SESSION['step']))
-                                            echo 'Please enter your email address to receive an OTP.';
-                                        elseif ($_SESSION['step'] == 'verify_otp')
-                                            echo 'Enter the OTP sent to your email.';
-                                        elseif ($_SESSION['step'] == 'reset_password')
-                                            echo 'Enter your new password.';
+                                        if (!isset($_SESSION['step'])) {
+                                            echo 'Enter your email address to receive a secure password reset link.';
+                                        } elseif ($_SESSION['step'] == 'check_email') {
+                                            echo 'Check your email for the reset link. The link is valid for 1 hour.';
+                                        } elseif ($_SESSION['step'] == 'rate_limited') {
+                                            echo 'Too many reset attempts. Please wait 1 hour and try again.';
+                                        }
                                         ?>
                                     </p>
                                 </div>
@@ -135,35 +224,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             </div>
                                             <div class="mb-2 d-grid mt-3">
                                                 <button type="submit" name="verify_email"
-                                                    class="btn btn-primary btnAddCategory someText">Send OTP</button>
+                                                    class="btn btn-primary btnAddCategory someText">Send Reset Link</button>
                                             </div>
-                                        <?php } elseif ($_SESSION['step'] == 'verify_otp') { ?>
-                                            <div class="mb-2">
-                                                <label class="form-label someText m-0">Enter OTP</label>
-                                                <input type="text" name="otp" class="form-control someText shadow-none"
-                                                    required>
+                                        <?php } elseif ($_SESSION['step'] == 'check_email') { ?>
+                                            <div class="alert alert-info someText mb-3">
+                                                <strong>Check your email!</strong> We've sent a secure password reset link
+                                                to your inbox.
+                                                <br><br>
+                                                <small>Didn't receive the email? Check your spam folder or</small>
+                                                <a href="forgot_password.php" class="alert-link"> try again</a>
                                             </div>
-                                            <div class="mb-2 d-grid mt-3">
-                                                <button type="submit" name="verify_otp"
-                                                    class="btn btn-primary btnAddCategory someText">Verify OTP</button>
-                                            </div>
-                                        <?php } elseif ($_SESSION['step'] == 'reset_password') { ?>
-                                            <div class="mb-2">
-                                                <label class="form-label someText m-0">New Password</label>
-                                                <input type="password" name="new_password"
-                                                    class="form-control someText shadow-none" required>
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label someText m-0">Confirm Password</label>
-                                                <input type="password" name="confirm_password"
-                                                    class="form-control someText shadow-none" required>
+                                        <?php } elseif ($_SESSION['step'] == 'rate_limited') { ?>
+                                            <div class="alert alert-warning someText mb-3">
+                                                <strong>Too many attempts!</strong> For your security, you can only request
+                                                3 password resets per hour. Please wait and try again later.
                                             </div>
                                             <div class="mb-2 d-grid mt-3">
-                                                <button type="submit" name="update_password"
-                                                    class="btn btn-primary btnAddCategory someText">Update Password</button>
+                                                <a href="login.php"
+                                                    class="btn btn-outline-secondary btnAddCategory someText">Back to
+                                                    Login</a>
                                             </div>
                                         <?php } ?>
                                     </form>
+
+                                    <?php if (isset($_SESSION['step']) && $_SESSION['step'] == 'check_email') { ?>
+                                        <div class="mt-3 text-center">
+                                            <a href="login.php"
+                                                style="font-size: 13px; color: #4a1c1d; text-decoration: none;">
+                                                ← Back to Login
+                                            </a>
+                                        </div>
+                                    <?php } ?>
                                 </div>
                             </div>
 
