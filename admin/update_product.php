@@ -1,7 +1,12 @@
 <?php
 include('./config/config.php');
+require_once('./inc/FileUploadHandler.php');
+require_once('./inc/CSRFToken.php');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Verify CSRF token
+    CSRFToken::verifyOrDie();
+
     // Get form data
     $product_id = $_POST['product_id'];
     $product_category = $_POST['product_category'];
@@ -11,23 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $product_status = $_POST['product_status'];
 
     // Check if a new image is uploaded
-    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] == 0) {
-        // Process the new image
-        $product_image = $_FILES['product_image']['name'];
-        $target_directory = "./dist/img/";
-        $target_file = $target_directory . basename($product_image);
+    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $uploadHandler = new FileUploadHandler('./dist/img/');
+        $result = $uploadHandler->upload($_FILES['product_image']);
 
-        // Move the uploaded file to the desired directory
-        if (move_uploaded_file($_FILES['product_image']['tmp_name'], $target_file)) {
-            // If image upload is successful, use the new image name
-            // echo "Image uploaded successfully!"; // You can remove this echo.
-        } else {
-            // If upload fails, display an error message
-            // echo "Sorry, there was an error uploading your image."; // Remove this echo too.
+        if (!$result['success']) {
             $status = 'error';
             header("Location: products.php?status=$status");
             exit;
         }
+
+        $product_image = $result['filename'];
 
         // Update the product in the database, including the new image
         $query = "UPDATE products SET product_category = ?, product_name = ?, product_description = ?, product_price = ?, product_status = ?, product_image = ? WHERE product_id = ?";

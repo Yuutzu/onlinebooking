@@ -1,5 +1,6 @@
 <?php
 require('../admin/config/config.php');
+require_once('../admin/inc/FileUploadHandler.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Generate a random 6-digit reservation ID
@@ -21,12 +22,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $payment_remarks = $_POST['payment_remarks']; // New field for payment remarks
 
     // Define the upload directory
-    $uploadDir = "../dist/img/"; // Store images in ./dist/img/
+    $uploadDir = "../dist/img/";
 
-    // Create directory if it doesn't exist
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
+    // Initialize file upload handler
+    $uploadHandler = new FileUploadHandler($uploadDir);
 
     // Initialize file name variables
     $client_id_image = "";
@@ -34,22 +33,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Handle client ID image upload
     if (!empty($_FILES['client_id_image']['name'])) {
-        $client_id_image = time() . "_" . uniqid() . "_" . basename($_FILES["client_id_image"]["name"]);
-        $targetPath = $uploadDir . $client_id_image;
-        if (!move_uploaded_file($_FILES["client_id_image"]["tmp_name"], $targetPath)) {
-            echo json_encode(["success" => false, "message" => "Failed to upload client ID image."]);
+        $uploadResult = $uploadHandler->upload($_FILES['client_id_image']);
+
+        if (!$uploadResult['success']) {
+            echo json_encode(["success" => false, "message" => $uploadResult['message']]);
             exit;
         }
+
+        $client_id_image = $uploadResult['filename'];
     }
 
     // Handle GCash reference image upload (if applicable)
     if ($payment_method == "gcash" && !empty($_FILES['client_gcash_ref_image']['name'])) {
-        $client_gcash_ref_image = time() . "_" . uniqid() . "_" . basename($_FILES["client_gcash_ref_image"]["name"]);
-        $targetPath = $uploadDir . $client_gcash_ref_image;
-        if (!move_uploaded_file($_FILES["client_gcash_ref_image"]["tmp_name"], $targetPath)) {
-            echo json_encode(["success" => false, "message" => "Failed to upload GCash reference image."]);
+        $uploadResult = $uploadHandler->upload($_FILES['client_gcash_ref_image']);
+
+        if (!$uploadResult['success']) {
+            echo json_encode(["success" => false, "message" => $uploadResult['message']]);
             exit;
         }
+
+        $client_gcash_ref_image = $uploadResult['filename'];
     }
 
     // Additional GCash fields (if payment method is GCash)
@@ -66,11 +69,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmt = $mysqli->prepare($sql)) {
         $stmt->bind_param(
-            "iisssssssssssssddss", 
-            $reservation_id, $room_id, $client_name, $client_email, $client_contact, $client_address, 
-            $client_id_type, $check_in_date, $check_out_date, $client_id_image, $payment_method, 
-            $client_gcash_name, $client_gcash_number, $client_gcash_ref, $client_gcash_ref_image, 
-            $total_price, $amount_paid, $balance, $payment_remarks
+            "iisssssssssssssddss",
+            $reservation_id,
+            $room_id,
+            $client_name,
+            $client_email,
+            $client_contact,
+            $client_address,
+            $client_id_type,
+            $check_in_date,
+            $check_out_date,
+            $client_id_image,
+            $payment_method,
+            $client_gcash_name,
+            $client_gcash_number,
+            $client_gcash_ref,
+            $client_gcash_ref_image,
+            $total_price,
+            $amount_paid,
+            $balance,
+            $payment_remarks
         );
 
         if ($stmt->execute()) {

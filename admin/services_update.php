@@ -3,9 +3,13 @@
 session_start();
 include('./config/config.php');
 include('./config/checklogin.php');
+require_once('./inc/FileUploadHandler.php');
+require_once('./inc/CSRFToken.php');
 require('./inc/alert.php');
 
 if (isset($_POST['update_service'])) {
+    // Verify CSRF token
+    CSRFToken::verifyOrDie();
 
     $service_id = $_GET['service_id'];
     $service_name = $_POST['service_name'];
@@ -14,9 +18,14 @@ if (isset($_POST['update_service'])) {
     $service_status = $_POST['service_status']; // Define service_status here
 
     // Check if an image has been uploaded
-    if (!empty($_FILES["service_pic"]["name"])) {
-        $service_pic = $_FILES["service_pic"]["name"];
-        move_uploaded_file($_FILES["service_pic"]["tmp_name"], "dist/img/" . $_FILES["service_pic"]["name"]);
+    $uploadHandler = new FileUploadHandler('dist/img/');
+    if (isset($_FILES['service_pic']) && $_FILES['service_pic']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $result = $uploadHandler->upload($_FILES['service_pic']);
+        if (!$result['success']) {
+            alert('error', $result['message']);
+            exit;
+        }
+        $service_pic = $result['filename'];
         $update_image_query = ", service_picture = ?";
         $bind_param_types = 'ssssss'; // The type definition string when an image is uploaded
         $bind_param_values = [$service_name, $service_description, $service_price, $service_pic, $service_status, $service_id];
@@ -102,7 +111,7 @@ if (isset($_POST['update_service'])) {
 
     while ($row = $res->fetch_object()) {
 
-    ?>
+        ?>
 
         <!-- Main Container -->
         <div class="container-fluid" id="main-content">
@@ -115,9 +124,12 @@ if (isset($_POST['update_service'])) {
                         <h5 class="titleFont mb-1">Room Services</h5>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb ">
-                                <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none" style="color: #333333;">Admin Dashboard</a></li>
-                                <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none" style="color: #333333;">Room Services</a></li>
-                                <li class="breadcrumb-item linkFont active"><a href="#" class="text-decoration-none" style="color: #333333;">Update Services</a></li>
+                                <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none"
+                                        style="color: #333333;">Admin Dashboard</a></li>
+                                <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none"
+                                        style="color: #333333;">Room Services</a></li>
+                                <li class="breadcrumb-item linkFont active"><a href="#" class="text-decoration-none"
+                                        style="color: #333333;">Update Services</a></li>
                             </ol>
                         </nav>
                     </div>
@@ -133,49 +145,58 @@ if (isset($_POST['update_service'])) {
                                     Update Services - Please Fill Out Neccessary Information.
                                 </div>
 
-                                <form action="services_update.php?service_id=<?php echo $row->service_id; ?>" method="POST" onsubmit="confirmSave(event)" enctype="multipart/form-data">
+                                <form action="services_update.php?service_id=<?php echo $row->service_id; ?>" method="POST"
+                                    onsubmit="confirmSave(event)" enctype="multipart/form-data">
                                     <div class="mt-3">
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Service</label>
-                                            <input type="text" name="service_name" class="form-control someText shadow-none" required value="<?php echo $row->service_name; ?>">
+                                            <input type="text" name="service_name" class="form-control someText shadow-none"
+                                                required value="<?php echo $row->service_name; ?>">
                                         </div>
 
                                         <div class="mb-2 mt-3">
                                             <label class="form-label someText">Service Description</label>
-                                            <textarea type="text" class="form-control shadow-none someText" contenteditable="true" name="service_description" rows="4" id="desc" required><?php echo $row->service_description; ?></textarea>
+                                            <textarea type="text" class="form-control shadow-none someText"
+                                                contenteditable="true" name="service_description" rows="4" id="desc"
+                                                required><?php echo $row->service_description; ?></textarea>
                                         </div>
 
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Price</label>
-                                            <input type="number" name="service_price" class="form-control someText shadow-none" required value="<?php echo $row->service_price; ?>">
+                                            <input type="number" name="service_price"
+                                                class="form-control someText shadow-none" required
+                                                value="<?php echo $row->service_price; ?>">
                                         </div>
 
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Picture</label>
-                                            <input type="file" name="service_pic" class="form-control shadow-none someText" accept="image/*">
+                                            <input type="file" name="service_pic" class="form-control shadow-none someText"
+                                                accept="image/*">
                                         </div>
 
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Service Status</label>
-                                            <select name="service_status" required class="form-control shadow-none someText">
+                                            <select name="service_status" required
+                                                class="form-control shadow-none someText">
                                                 <option value="Available" <?php echo ($row->service_status == 'Available') ? 'selected' : ''; ?>>Available</option>
                                                 <option value="Unvailable" <?php echo ($row->service_status == 'Unvailable') ? 'selected' : ''; ?>>Unvailable</option>
                                             </select>
                                         </div>
 
                                         <div class="mb-2 mt-3 d-grid">
-                                            <button type="submit" name="update_service" class="btn btn-primary btnAddCategory someText">Update</button>
+                                            <button type="submit" name="update_service"
+                                                class="btn btn-primary btnAddCategory someText">Update</button>
                                         </div>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    <?php
-                } ?>
-                    </div>
+                        <?php
+    } ?>
                 </div>
             </div>
         </div>
+    </div>
 
 </body>
 

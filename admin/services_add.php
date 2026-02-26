@@ -3,9 +3,13 @@
 session_start();
 include('./config/config.php');
 include('./config/checklogin.php');
+require_once('./inc/FileUploadHandler.php');
+require_once('./inc/CSRFToken.php');
 require('./inc/alert.php');
 
 if (isset($_POST['save_service'])) {
+    // Verify CSRF token
+    CSRFToken::verifyOrDie();
 
     // Generate Category Number
     $length = 4;
@@ -14,9 +18,17 @@ if (isset($_POST['save_service'])) {
     $service_id = "SER-$_Number";
     $service_name = $_POST['service_name'];
     $service_description = $_POST['service_description'];
-    $service_pic  = $_FILES["service_pic"]["name"];
-    move_uploaded_file($_FILES["service_pic"]["tmp_name"], "dist/img/" . $_FILES["service_pic"]["name"]);
     $service_status = $_POST['service_status'];
+
+    $uploadHandler = new FileUploadHandler('dist/img/');
+    $result = $uploadHandler->upload($_FILES['service_pic']);
+
+    if (!$result['success']) {
+        alert('error', $result['message']);
+        exit;
+    }
+
+    $service_pic = $result['filename'];
 
     $duplicateQuery = "SELECT COUNT(*) AS count FROM room_services WHERE service_name = ?";
     $stmt1 = $mysqli->prepare($duplicateQuery);
@@ -98,9 +110,12 @@ if (isset($_POST['save_service'])) {
                     <h5 class="titleFont mb-1">Room Services</h5>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb ">
-                            <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none" style="color: #333333;">Admin Dashboard</a></li>
-                            <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none" style="color: #333333;">Room Services</a></li>
-                            <li class="breadcrumb-item linkFont active"><a href="#" class="text-decoration-none" style="color: #333333;">Add Services</a></li>
+                            <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none"
+                                    style="color: #333333;">Admin Dashboard</a></li>
+                            <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none"
+                                    style="color: #333333;">Room Services</a></li>
+                            <li class="breadcrumb-item linkFont active"><a href="#" class="text-decoration-none"
+                                    style="color: #333333;">Add Services</a></li>
                         </ol>
                     </nav>
                 </div>
@@ -116,16 +131,20 @@ if (isset($_POST['save_service'])) {
                                 Add Services - Please Fill Out Neccessary Information.
                             </div>
 
-                            <form action="services_add.php" method="POST" onsubmit="confirmSave(event)" enctype="multipart/form-data">
+                            <form action="services_add.php" method="POST" onsubmit="confirmSave(event)"
+                                enctype="multipart/form-data">
                                 <div class="mt-3">
                                     <div class="mb-2">
                                         <label class="form-label someText m-0">Service</label>
-                                        <input type="text" name="service_name" class="form-control someText shadow-none" required>
+                                        <input type="text" name="service_name" class="form-control someText shadow-none"
+                                            required>
                                     </div>
 
                                     <div class="mb-2 mt-3">
                                         <label class="form-label someText">Service Description</label>
-                                        <textarea type="text" class="form-control shadow-none someText" contenteditable="true" name="service_description" rows="4" id="desc" required></textarea>
+                                        <textarea type="text" class="form-control shadow-none someText"
+                                            contenteditable="true" name="service_description" rows="4" id="desc"
+                                            required></textarea>
                                     </div>
 
                                     <div class="mb-2">
@@ -135,7 +154,8 @@ if (isset($_POST['save_service'])) {
 
                                     <div class="mb-2">
                                         <label class="form-label someText m-0">Service Status</label>
-                                        <select name="service_status" required class="form-control shadow-none someText">
+                                        <select name="service_status" required
+                                            class="form-control shadow-none someText">
                                             <option>Select Status</option>
                                             <option value="Available">Available</option>
                                             <option value="Not Available">Not Available</option>
@@ -143,7 +163,8 @@ if (isset($_POST['save_service'])) {
                                     </div>
 
                                     <div class="mb-2 mt-3 d-grid">
-                                        <button type="submit" name="save_service" class="btn btn-primary btnAddCategory someText">Save</button>
+                                        <button type="submit" name="save_service"
+                                            class="btn btn-primary btnAddCategory someText">Save</button>
                                     </div>
                                 </div>
                             </form>

@@ -1,7 +1,12 @@
 <?php
 include('./config/config.php');
+require_once('./inc/FileUploadHandler.php');
+require_once('./inc/CSRFToken.php');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Verify CSRF token
+    CSRFToken::verifyOrDie();
+
     $client_id = $_POST['client_id']; // Admin ID (Primary Key)
     $client_name = $_POST['client_name'];
     $client_presented_id = $_POST['client_presented_id'];
@@ -9,18 +14,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $client_email = $_POST['client_email'];
     $client_id_number = $_POST['client_id_number']; // Corrected variable name for ID Number
 
+    $uploadHandler = new FileUploadHandler('./dist/img/');
+
     // Handle profile picture update
-    $client_picture = $_POST['existing_image']; // Keep existing image if no new one is uploaded
-    if (!empty($_FILES['client_picture']['name'])) {
-        $client_picture = basename($_FILES['client_picture']['name']);
-        move_uploaded_file($_FILES['client_picture']['tmp_name'], "./dist/img/" . $client_picture);
+    $client_picture = $_POST['existing_image'];
+    if (isset($_FILES['client_picture']) && $_FILES['client_picture']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $result = $uploadHandler->upload($_FILES['client_picture']);
+        if (!$result['success']) {
+            echo "<script>alert('" . addslashes($result['message']) . "');</script>";
+            exit;
+        }
+        $client_picture = $result['filename'];
     }
 
     // Handle ID image update
-    $client_id_picture = $_POST['existing_id_image']; // Keep existing ID image if no new one is uploaded
-    if (!empty($_FILES['client_id_picture']['name'])) {
-        $client_id_picture = basename($_FILES['client_id_picture']['name']);
-        move_uploaded_file($_FILES['client_id_picture']['tmp_name'], "./dist/img/" . $client_id_picture);
+    $client_id_picture = $_POST['existing_id_image'];
+    if (isset($_FILES['client_id_picture']) && $_FILES['client_id_picture']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $result = $uploadHandler->upload($_FILES['client_id_picture']);
+        if (!$result['success']) {
+            echo "<script>alert('" . addslashes($result['message']) . "');</script>";
+            exit;
+        }
+        $client_id_picture = $result['filename'];
     }
 
     // Update database

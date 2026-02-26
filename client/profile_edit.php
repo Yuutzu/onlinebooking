@@ -2,6 +2,8 @@
 session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
+include_once('../admin/inc/FileUploadHandler.php');
+require_once('../admin/inc/CSRFToken.php');
 require('../admin/inc/alert.php');
 
 $client_id = $_SESSION['client_id'];
@@ -15,22 +17,31 @@ $res = $stmt->get_result();
 $row = $res->fetch_object();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Verify CSRF token
+    CSRFToken::verifyOrDie();
+
+    $uploadHandler = new FileUploadHandler('../admin/dist/img/');
+
     // Handle Profile Picture Update
-    if (isset($_FILES['client_picture']) && $_FILES['client_picture']['name'] != '') {
-        $target_dir = "../admin/dist/img/";
-        $client_picture = basename($_FILES["client_picture"]["name"]);
-        $target_file = $target_dir . $client_picture;
-        move_uploaded_file($_FILES["client_picture"]["tmp_name"], $target_file);
+    if (isset($_FILES['client_picture']) && $_FILES['client_picture']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $result = $uploadHandler->upload($_FILES['client_picture']);
+        if (!$result['success']) {
+            echo json_encode(['success' => false, 'message' => $result['message']]);
+            exit;
+        }
+        $client_picture = $result['filename'];
     } else {
         $client_picture = $row->client_picture;
     }
 
     // Handle ID Image Update
-    if (isset($_FILES['client_id_picture']) && $_FILES['client_id_picture']['name'] != '') {
-        $target_dir = "../admin/dist/img/";
-        $client_id_picture = basename($_FILES["client_id_picture"]["name"]);
-        $target_file = $target_dir . $client_id_picture;
-        move_uploaded_file($_FILES["client_id_picture"]["tmp_name"], $target_file);
+    if (isset($_FILES['client_id_picture']) && $_FILES['client_id_picture']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $result = $uploadHandler->upload($_FILES['client_id_picture']);
+        if (!$result['success']) {
+            echo json_encode(['success' => false, 'message' => $result['message']]);
+            exit;
+        }
+        $client_id_picture = $result['filename'];
     } else {
         $client_id_picture = $row->client_id_picture;
     }

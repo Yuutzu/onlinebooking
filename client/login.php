@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once('../admin/inc/SessionManager.php');
+SessionManager::init();
+
 include_once('../admin/config/config.php');
 include_once('../admin/config/checklogin.php');
 include_once('../admin/inc/email_2fa_helper.php');
@@ -37,9 +39,12 @@ if (isset($_POST['login'])) {
 
             if ($role === "Admin") {
                 // Admin Login (No blocking applied)
-                $_SESSION['admin_id'] = $id;
-                $_SESSION['admin_name'] = $name;
-                $_SESSION['admin_email'] = $result_email;
+                SessionManager::create($id, $name, [
+                    'admin_id' => $id,
+                    'admin_name' => $name,
+                    'admin_email' => $result_email,
+                    'role' => 'Admin'
+                ]);
 
                 echo "<script>
                     window.location.href = '../admin/dashboard.php';
@@ -66,14 +71,15 @@ if (isset($_POST['login'])) {
 
                 // Check if user has pending OTP verification
                 if ($status === "Pending") {
-                    $_SESSION['client_id'] = $id;
-                    $_SESSION['client_name'] = $name;
-                    $_SESSION['client_email'] = $result_email;
-
-                    // Generate and send OTP immediately
+                    // Create session with OTP data
                     $otp = rand(100000, 999999);
-                    $_SESSION['otp'] = $otp;
-                    $_SESSION['otp_expiry'] = time() + (5 * 60); // Valid for 5 minutes
+                    SessionManager::create($id, $name, [
+                        'client_id' => $id,
+                        'client_name' => $name,
+                        'client_email' => $result_email,
+                        'otp' => $otp,
+                        'otp_expiry' => time() + (5 * 60) // Valid for 5 minutes
+                    ]);
 
                     try {
                         $mail = getMailer();
@@ -187,10 +193,12 @@ if (isset($_POST['login'])) {
                     }
                 }
 
-                // Normal login - set session variables
-                $_SESSION['client_id'] = $id;
-                $_SESSION['client_name'] = $name;
-                $_SESSION['client_email'] = $result_email;
+                // Normal login - set session variables with SessionManager
+                SessionManager::create($id, $name, [
+                    'client_id' => $id,
+                    'client_name' => $name,
+                    'client_email' => $result_email
+                ]);
 
                 if ($status === "Activated") {
                     header("location: index.php");
@@ -227,6 +235,7 @@ if (isset($_POST['login'])) {
         alert("error", "Email not found.");
     }
 }
+
 ?>
 
 

@@ -2,6 +2,8 @@
 session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
+include_once('../admin/inc/FileUploadHandler.php');
+require_once('../admin/inc/CSRFToken.php');
 require('../admin/inc/alert.php');
 require_once('../admin/inc/mailer_helper.php');
 
@@ -14,16 +16,24 @@ $result = $mysqli->query($query);
 $settings = $result->fetch_assoc();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_payment'])) {
+    // Verify CSRF token
+    CSRFToken::verifyOrDie();
+
     $check_in = $_POST['check_in'];
     $check_out = $_POST['check_out'];
     $gcash_name = $_POST['gcash_name'];
     $gcash_number = $_POST['gcash_number'];
     $gcash_ref = $_POST['gcash_ref'];
 
-    $payment_screenshot = $_FILES["gcash_screenshot"]["name"];
-    $target_dir = "../admin/dist/img/";
-    $target_file = $target_dir . basename($payment_screenshot);
-    move_uploaded_file($_FILES["gcash_screenshot"]["tmp_name"], $target_file);
+    $uploadHandler = new FileUploadHandler('../admin/dist/img/');
+    $result = $uploadHandler->upload($_FILES['gcash_screenshot']);
+
+    if (!$result['success']) {
+        alert('error', $result['message']);
+        exit;
+    }
+
+    $payment_screenshot = $result['filename'];
 
     // Calculate Price
     $stmt = $mysqli->prepare("SELECT room_price FROM rooms WHERE room_id = ? AND room_status = 'Available'");

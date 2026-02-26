@@ -1,7 +1,12 @@
 <?php
 include('./config/config.php');
+require_once('./inc/FileUploadHandler.php');
+require_once('./inc/CSRFToken.php');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Verify CSRF token
+    CSRFToken::verifyOrDie();
+
     $client_id = $_POST['client_id'];
     $client_name = $_POST['client_name'];
     $client_presented_id = $_POST['client_presented_id'];
@@ -10,9 +15,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $client_status = $_POST['client_status'];
 
     $client_picture = $_POST['existing_image'];
-    if (!empty($_FILES['client_picture']['name'])) {
-        $client_picture = $_FILES['client_picture']['name'];
-        move_uploaded_file($_FILES['client_picture']['tmp_name'], "./dist/img/" . $client_picture);
+    if (isset($_FILES['client_picture']) && $_FILES['client_picture']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $uploadHandler = new FileUploadHandler('./dist/img/');
+        $result = $uploadHandler->upload($_FILES['client_picture']);
+        if (!$result['success']) {
+            echo "<script>alert('" . addslashes($result['message']) . "');</script>";
+            exit;
+        }
+        $client_picture = $result['filename'];
     }
 
     $query = "UPDATE clients SET client_name = ?, client_presented_id = ?, client_phone = ?, client_email = ?, client_status = ?, client_picture = ?, failed_attempts = '0' WHERE id = ?";

@@ -3,9 +3,13 @@
 session_start();
 include('./config/config.php');
 include('./config/checklogin.php');
+require_once('./inc/FileUploadHandler.php');
+require_once('./inc/CSRFToken.php');
 require('./inc/alert.php');
 
 if (isset($_POST['save_category'])) {
+    // Verify CSRF token
+    CSRFToken::verifyOrDie();
 
     $room_name = $_POST['room_name'];
     $room_number = $_POST['room_number'];
@@ -15,8 +19,16 @@ if (isset($_POST['save_category'])) {
     $room_category = $_POST['room_category'];
     $room_price = $_POST['room_price'];
     $room_status = $_POST['room_status'];
-    $room_picture  = $_FILES["room_picture"]["name"];
-    move_uploaded_file($_FILES["room_picture"]["tmp_name"], "dist/img/" . $_FILES["room_picture"]["name"]);
+
+    $uploadHandler = new FileUploadHandler('dist/img/');
+    $result = $uploadHandler->upload($_FILES['room_picture']);
+
+    if (!$result['success']) {
+        alert('error', $result['message']);
+        exit;
+    }
+
+    $room_picture = $result['filename'];
 
 
 
@@ -101,9 +113,12 @@ if (isset($_POST['save_category'])) {
                     <h5 class="titleFont mb-1">Room</h5>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb ">
-                            <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none" style="color: #333333;">Admin Dashboard</a></li>
-                            <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none" style="color: #333333;">Room</a></li>
-                            <li class="breadcrumb-item linkFont active"><a href="#" class="text-decoration-none" style="color: #333333;">Add Room</a></li>
+                            <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none"
+                                    style="color: #333333;">Admin Dashboard</a></li>
+                            <li class="breadcrumb-item linkFont"><a href="#" class="text-decoration-none"
+                                    style="color: #333333;">Room</a></li>
+                            <li class="breadcrumb-item linkFont active"><a href="#" class="text-decoration-none"
+                                    style="color: #333333;">Add Room</a></li>
                         </ol>
                     </nav>
                 </div>
@@ -119,42 +134,49 @@ if (isset($_POST['save_category'])) {
                                 Add Room - Please Fill Out Neccessary Information.
                             </div>
 
-                            <form action="room_add.php" method="POST" onsubmit="confirmSave(event)" enctype="multipart/form-data">
+                            <form action="room_add.php" method="POST" onsubmit="confirmSave(event)"
+                                enctype="multipart/form-data">
                                 <div class="mt-3 d-flex justify-content-between">
 
                                     <div class="col-lg-4">
                                         <div class="mb-2 me-2">
                                             <label class="form-label someText m-0">Room Name</label>
-                                            <input type="text" name="room_name" class="form-control someText shadow-none" required>
+                                            <input type="text" name="room_name"
+                                                class="form-control someText shadow-none" required>
                                         </div>
 
                                         <div class="mb-2 me-2">
                                             <label class="form-label someText m-0">Room Number</label>
-                                            <input type="text" name="room_number" class="form-control someText shadow-none" required>
+                                            <input type="text" name="room_number"
+                                                class="form-control someText shadow-none" required>
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4">
                                         <div class="mb-2 me-2">
                                             <label class="form-label someText m-0">Adult</label>
-                                            <input type="number" name="room_adult" class="form-control someText shadow-none" required>
+                                            <input type="number" name="room_adult"
+                                                class="form-control someText shadow-none" required>
                                         </div>
 
                                         <div class="mb-2 me-2">
                                             <label class="form-label someText m-0">Child</label>
-                                            <input type="number" name="room_child" class="form-control someText shadow-none" required>
+                                            <input type="number" name="room_child"
+                                                class="form-control someText shadow-none" required>
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4">
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Price</label>
-                                            <input type="number" name="room_price" class="form-control someText shadow-none" required>
+                                            <input type="number" name="room_price"
+                                                class="form-control someText shadow-none" required>
                                         </div>
 
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Room Category</label>
-                                            <select name="room_category" required class="form-control shadow-none someText">
+                                            <select name="room_category" required
+                                                class="form-control shadow-none someText">
                                                 <option>Select Status</option>
                                                 <!-- Fetching Details and Values -->
                                                 <?php
@@ -164,8 +186,10 @@ if (isset($_POST['save_category'])) {
                                                 $res = $stmt->get_result();
 
                                                 while ($row1 = $res->fetch_object()) {
-                                                ?>
-                                                    <option value="<?php echo $row1->category_name; ?>"><?php echo $row1->category_name; ?></option>
+                                                    ?>
+                                                    <option value="<?php echo $row1->category_name; ?>">
+                                                        <?php echo $row1->category_name; ?>
+                                                    </option>
                                                 <?php } ?>
                                             </select>
 
@@ -184,7 +208,9 @@ if (isset($_POST['save_category'])) {
                                     </select>
 
                                     <label class="form-label someText">Room Category Description</label>
-                                    <textarea type="text" class="form-control shadow-none someText" contenteditable="true" name="room_description" rows="4" id="desc" required></textarea>
+                                    <textarea type="text" class="form-control shadow-none someText"
+                                        contenteditable="true" name="room_description" rows="4" id="desc"
+                                        required></textarea>
                                 </div>
 
                                 <div class="mb-2">
@@ -193,7 +219,8 @@ if (isset($_POST['save_category'])) {
                                 </div>
 
                                 <div class="mb-2 mt-3 d-grid">
-                                    <button type="submit" name="save_category" class="btn btn-primary btnAddCategory someText">Save</button>
+                                    <button type="submit" name="save_category"
+                                        class="btn btn-primary btnAddCategory someText">Save</button>
                                 </div>
 
                             </form>

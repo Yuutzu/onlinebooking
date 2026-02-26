@@ -3,6 +3,7 @@ session_start();
 include('../admin/config/config.php');
 include('../admin/config/checklogin.php');
 include_once('../admin/inc/password_helper.php');
+include_once('../admin/inc/FileUploadHandler.php');
 require('../admin/inc/alert.php');
 require_once('../admin/inc/mailer_helper.php');
 
@@ -25,8 +26,23 @@ if (isset($_POST['register'])) {
     $client_phone = $_POST['client_number'];
     $client_email = $_POST['client_email'];
     $client_presented_id = $_POST['client_presented_id'];
-    $client_id_picture = $_FILES["client_id_picture"]["name"];
-    move_uploaded_file($_FILES["client_id_picture"]["tmp_name"], "dist/img/" . $_FILES["client_id_picture"]["name"]);
+
+    // Secure file upload handler
+    if (!isset($_FILES['client_id_picture']) || $_FILES['client_id_picture']['error'] === UPLOAD_ERR_NO_FILE) {
+        echo "<script>alert('ID picture is required.'); window.location.href='register.php';</script>";
+        exit;
+    }
+
+    $uploadHandler = new FileUploadHandler('dist/img/');
+    $uploadResult = $uploadHandler->upload($_FILES['client_id_picture']);
+
+    if (!$uploadResult['success']) {
+        echo "<script>alert('" . addslashes($uploadResult['message']) . "'); window.location.href='register.php';</script>";
+        exit;
+    }
+
+    $client_id_picture = $uploadResult['filename'];
+
     $client_id_number = $_POST['client_id_number'];
     $password = $temp_pass;
     $client_status = "Pending";
