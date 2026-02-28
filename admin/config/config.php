@@ -2,25 +2,18 @@
 // Set timezone to Philippines (UTC+8)
 date_default_timezone_set('Asia/Manila');
 
-// Load environment variables
-function loadEnv($filePath = __DIR__ . '/../../.env')
-{
-    if (!file_exists($filePath)) {
-        throw new Exception('.env file not found');
-    }
+// Load environment variables from env.php
+require_once __DIR__ . '/env.php';
 
-    $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
-            list($key, $value) = explode('=', $line, 2);
-            $key = trim($key);
-            $value = trim($value);
-            $_ENV[$key] = $value;
-        }
-    }
+// Load environment variables if not already loaded
+if (!function_exists('env')) {
+    throw new Exception('Environment loader not initialized');
 }
 
-loadEnv();
+// Call loadEnv to populate $_ENV if not already done
+if (empty($_ENV['DB_HOST'])) {
+    loadEnv();
+}
 
 // Get database credentials from environment variables
 $dbuser = $_ENV['DB_USER'] ?? 'root';
