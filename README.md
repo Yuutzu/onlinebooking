@@ -23,6 +23,7 @@ A comprehensive hotel booking management system built with PHP, MySQL, and Boots
 ### 🎯 Core Functionality
 
 #### **Client Features**
+
 - ✅ User registration with email verification (OTP)
 - ✅ Two-factor authentication (2FA) via email
 - ✅ Secure login with failed attempt tracking
@@ -34,6 +35,7 @@ A comprehensive hotel booking management system built with PHP, MySQL, and Boots
 - ✅ Reservation history and PDF generation
 
 #### **Admin Dashboard**
+
 - ✅ Comprehensive dashboard with analytics
 - ✅ Room management (add, edit, delete)
 - ✅ Room category management
@@ -48,6 +50,7 @@ A comprehensive hotel booking management system built with PHP, MySQL, and Boots
 - ✅ PDF invoice generation
 
 #### **Payment Integration**
+
 - ✅ GCash payment processing
 - ✅ Payment verification
 - ✅ Transaction history
@@ -60,6 +63,7 @@ A comprehensive hotel booking management system built with PHP, MySQL, and Boots
 ### Enterprise-Grade Security Implementation
 
 #### **Authentication & Authorization**
+
 - ✅ **Bcrypt Password Hashing** - Passwords stored with bcrypt algorithm
 - ✅ **Argon2ID Hashing** - Upgrade path for sensitive password updates
 - ✅ **Email OTP Verification** - Prevents unauthorized account access
@@ -69,6 +73,7 @@ A comprehensive hotel booking management system built with PHP, MySQL, and Boots
 - ✅ **Rate Limiting** - Protection against brute force attacks
 
 #### **Data Protection**
+
 - ✅ **Prepared Statements** - All database queries use parameterized statements
 - ✅ **CSRF Token Protection** - Cryptographic tokens on all state-changing forms
 - ✅ **SQL Injection Prevention** - No dynamic SQL concatenation
@@ -76,6 +81,7 @@ A comprehensive hotel booking management system built with PHP, MySQL, and Boots
 - ✅ **Environment Variables** - Credentials stored in `.env` (never in code)
 
 #### **Session Security**
+
 - ✅ **Session Timeout** - 30 minutes of inactivity
 - ✅ **Session Regeneration** - Every 10 minutes automatically
 - ✅ **IP Address Validation** - Detects session hijacking
@@ -83,6 +89,7 @@ A comprehensive hotel booking management system built with PHP, MySQL, and Boots
 - ✅ **SameSite=Strict** - Prevents CSRF-like attacks
 
 #### **Input Validation**
+
 - ✅ **Email Validation** - Format and existence verification
 - ✅ **Type-Safe Binding** - Database parameters with strict type checking
 - ✅ **HTML Output Escaping** - XSS prevention via `htmlspecialchars()`
@@ -92,18 +99,18 @@ A comprehensive hotel booking management system built with PHP, MySQL, and Boots
 
 ## 🛠️ Technology Stack
 
-| Component | Technology |
-|-----------|-----------|
-| **Scripting Language** | PHP 7.4+ |
-| **Database** | MySQL 5.7+ |
-| **Frontend Framework** | Bootstrap 5 |
-| **Authentication** | Native PHP Sessions |
-| **Password Hashing** | bcrypt + Argon2ID |
-| **Email Service** | PHPMailer (SMTP) |
-| **Payment Gateway** | GCash API |
-| **PDF Generation** | TCPDF |
-| **Version Control** | Git + GitHub |
-| **Server** | Apache 2.4 with mod_rewrite |
+| Component              | Technology                  |
+| ---------------------- | --------------------------- |
+| **Scripting Language** | PHP 7.4+                    |
+| **Database**           | MySQL 5.7+                  |
+| **Frontend Framework** | Bootstrap 5                 |
+| **Authentication**     | Native PHP Sessions         |
+| **Password Hashing**   | bcrypt + Argon2ID           |
+| **Email Service**      | PHPMailer (SMTP)            |
+| **Payment Gateway**    | GCash API                   |
+| **PDF Generation**     | TCPDF                       |
+| **Version Control**    | Git + GitHub                |
+| **Server**             | Apache 2.4 with mod_rewrite |
 
 ---
 
@@ -222,6 +229,7 @@ mysql -u root -p hotel_management < backup/sql/hotel.sql
 ```
 
 Or manually create through phpMyAdmin:
+
 1. Create new database: `hotel_management`
 2. Import `backup/sql/hotel.sql`
 
@@ -243,7 +251,7 @@ Add to `httpd-vhosts.conf`:
     ServerName hotel.local
     ServerAlias www.hotel.local
     DocumentRoot "C:/xampp/htdocs/Hotel"
-    
+
     <Directory "C:/xampp/htdocs/Hotel">
         AllowOverride All
         Require all granted
@@ -273,15 +281,15 @@ sudo systemctl restart apache2
 
 ### Environment Variables (.env)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_HOST` | Database server address | localhost |
-| `DB_USER` | Database username | root |
-| `DB_PASS` | Database password | (empty) |
-| `DB_NAME` | Database name | hotel_management |
-| `APP_ENV` | Environment (production/development) | production |
-| `APP_DEBUG` | Debug mode (true/false) | false |
-| `APP_SESSION_TIMEOUT` | Session timeout in seconds | 1800 |
+| Variable              | Description                          | Default          |
+| --------------------- | ------------------------------------ | ---------------- |
+| `DB_HOST`             | Database server address              | localhost        |
+| `DB_USER`             | Database username                    | root             |
+| `DB_PASS`             | Database password                    | (empty)          |
+| `DB_NAME`             | Database name                        | hotel_management |
+| `APP_ENV`             | Environment (production/development) | production       |
+| `APP_DEBUG`           | Debug mode (true/false)              | false            |
+| `APP_SESSION_TIMEOUT` | Session timeout in seconds           | 1800             |
 
 ### SMTP Configuration (mailer_helper.php)
 
@@ -297,6 +305,7 @@ $mail->Password = 'your-app-password';
 ### GCash Payment Integration
 
 Configure payment settings in `admin/admin_settings.php`:
+
 - GCash Account Name
 - GCash Mobile Number
 - GCash Account Details
@@ -308,6 +317,7 @@ Configure payment settings in `admin/admin_settings.php`:
 ### Core Tables
 
 #### **clients**
+
 - `id` - Primary key
 - `client_email` - Email address (unique)
 - `client_password` - Bcrypt hashed password
@@ -320,6 +330,7 @@ Configure payment settings in `admin/admin_settings.php`:
 - `last_failed_attempt` - Last failed attempt timestamp
 
 #### **rooms**
+
 - `room_id` - Primary key
 - `room_name` - Room name
 - `room_category` - Category name
@@ -331,6 +342,7 @@ Configure payment settings in `admin/admin_settings.php`:
 - `room_picture` - Image filename
 
 #### **online_reservation**
+
 - `reservation_id` - Primary key
 - `client_id` - Foreign key to clients
 - `room_id` - Foreign key to rooms
@@ -341,6 +353,7 @@ Configure payment settings in `admin/admin_settings.php`:
 - `reservation_status` - Status (Pending, Confirmed, Cancelled)
 
 #### **payments**
+
 - `payment_id` - Primary key
 - `reservation_id` - Foreign key
 - `amount` - Payment amount
@@ -353,12 +366,14 @@ Configure payment settings in `admin/admin_settings.php`:
 ## 👥 User Roles
 
 ### Admin Account (Role: Admin)
+
 - **ID:** `0` (default)
 - **Access:** Complete system control
 - **Default:** `admin@hotel.local`
 - **Features:** All admin functions, settings, reports
 
 ### Client Account (Role: Client)
+
 - **Self-registration:** Available on `/client/register.php`
 - **Account Statuses:**
   - **Pending:** Awaiting OTP verification
@@ -371,6 +386,7 @@ Configure payment settings in `admin/admin_settings.php`:
 ## 🔌 API Endpoints
 
 ### Authentication
+
 - `POST /client/login.php` - Client login
 - `POST /client/register.php` - Client registration
 - `POST /client/otp.php` - OTP verification
@@ -378,16 +394,19 @@ Configure payment settings in `admin/admin_settings.php`:
 - `GET /client/logout.php` - Logout
 
 ### Reservations
+
 - `POST /admin/book_room.php` - Create walk-in reservation
 - `POST /admin/extend_reservation.php` - Extend reservation
 - `GET /admin/fetch_reservation.php` - Fetch reservation details
 
 ### Admin Operations
+
 - `POST /admin/add_product.php` - Add product
 - `POST /admin/room_add.php` - Add room
 - `POST /admin/verify_admin_password.php` - Verify admin password
 
 ### Utilities
+
 - `POST /admin/fetch/` - Various data fetching endpoints
 
 ---
@@ -397,46 +416,61 @@ Configure payment settings in `admin/admin_settings.php`:
 ### Common Issues
 
 #### **Database Connection Error**
+
 ```
 Error: SQLSTATE[HY000] [1045]
 ```
+
 **Solution:**
+
 - Check `.env` file credentials
 - Verify MySQL is running
 - Ensure database `hotel_management` exists
 
 #### **Session Timeout Issues**
+
 ```
 Redirected to login unexpectedly
 ```
+
 **Solution:**
+
 - Check `APP_SESSION_TIMEOUT` in `.env`
 - Verify SessionManager is initialized
 - Clear browser cookies
 
 #### **Email Not Sending**
+
 ```
 SMTP Error: Could not connect to SMTP host
 ```
+
 **Solution:**
+
 - Verify SMTP credentials in `mailer_helper.php`
 - Check firewall allows port 587
 - Enable "Less secure apps" (Gmail)
 
 #### **File Upload Failing**
+
 ```
 MIME type validation failed
 ```
+
 **Solution:**
+
 - Verify upload directory permissions (755)
 - Check file matches allowed MIME types
 - Ensure file size < 2MB
 
 #### **CSRF Token Errors**
+
 ```
 403 Forbidden - Invalid CSRF token
 ```
+
 **Solution:**
+
 - Clear browser session/cookies
 - Ensure CSRFToken class is loaded
 - Verify `<form>` includes `<?php echo CSRFToken::field(); ?>`
@@ -471,6 +505,7 @@ MIME type validation failed
 All critical vulnerabilities have been patched. See [Security Updates](#security-features) above.
 
 ### Fixes Applied (Feb 2026)
+
 - ✅ Admin password hashing with bcrypt + rate limiting
 - ✅ Argon2ID password upgrade path
 - ✅ Session management after 2FA
@@ -486,12 +521,12 @@ All critical vulnerabilities have been patched. See [Security Updates](#security
 
 ### Regular Tasks
 
-| Frequency | Task | Command |
-|-----------|------|---------|
-| Daily | Backup database | `mysqldump hotel_management > backup/daily_$(date +%Y%m%d).sql` |
-| Weekly | Check error logs | Review Apache `error.log` |
-| Monthly | Update dependencies | `composer update` |
-| Quarterly | Security audit | Review recent commits |
+| Frequency | Task                | Command                                                         |
+| --------- | ------------------- | --------------------------------------------------------------- |
+| Daily     | Backup database     | `mysqldump hotel_management > backup/daily_$(date +%Y%m%d).sql` |
+| Weekly    | Check error logs    | Review Apache `error.log`                                       |
+| Monthly   | Update dependencies | `composer update`                                               |
+| Quarterly | Security audit      | Review recent commits                                           |
 
 ### Database Maintenance
 
@@ -549,11 +584,11 @@ This project is proprietary software. All rights reserved.
 
 ## 📈 Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.1.0 | Feb 28, 2026 | Security patch: 10 critical vulnerabilities fixed |
-| 1.0.5 | Feb 20, 2026 | File upload security implementation |
-| 1.0.0 | Jan 15, 2026 | Initial production release |
+| Version | Date         | Changes                                           |
+| ------- | ------------ | ------------------------------------------------- |
+| 1.1.0   | Feb 28, 2026 | Security patch: 10 critical vulnerabilities fixed |
+| 1.0.5   | Feb 20, 2026 | File upload security implementation               |
+| 1.0.0   | Jan 15, 2026 | Initial production release                        |
 
 ---
 
