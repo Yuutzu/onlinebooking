@@ -27,17 +27,35 @@ if (isset($_POST['register'])) {
     $client_email = $_POST['client_email'];
     $client_presented_id = $_POST['client_presented_id'];
 
-    // Secure file upload handler
-    if (!isset($_FILES['client_id_picture']) || $_FILES['client_id_picture']['error'] === UPLOAD_ERR_NO_FILE) {
-        echo "<script>alert('ID picture is required.'); window.location.href='register.php';</script>";
+    // Check if email already exists
+    $email_check = "SELECT id FROM clients WHERE client_email = ?";
+    $stmt_check = $mysqli->prepare($email_check);
+    $stmt_check->bind_param('s', $client_email);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+
+    if ($result_check->num_rows > 0) {
+        $_SESSION['upload_error'] = 'Email already registered. Please use a different email address.';
+        $_SESSION['form_data'] = $_POST;
+        header('Location: register.php');
         exit;
     }
 
-    $uploadHandler = new FileUploadHandler('dist/img/');
+    // Secure file upload handler
+    if (!isset($_FILES['client_id_picture']) || $_FILES['client_id_picture']['error'] === UPLOAD_ERR_NO_FILE) {
+        $_SESSION['upload_error'] = 'ID picture is required.';
+        $_SESSION['form_data'] = $_POST;
+        header('Location: register.php');
+        exit;
+    }
+
+    $uploadHandler = new FileUploadHandler('../admin/dist/img/');
     $uploadResult = $uploadHandler->upload($_FILES['client_id_picture']);
 
     if (!$uploadResult['success']) {
-        echo "<script>alert('" . addslashes($uploadResult['message']) . "'); window.location.href='register.php';</script>";
+        $_SESSION['upload_error'] = $uploadResult['message'];
+        $_SESSION['form_data'] = $_POST;
+        header('Location: register.php');
         exit;
     }
 
@@ -54,6 +72,7 @@ if (isset($_POST['register'])) {
         $mail = getMailer();
         $mail->addAddress($client_email, $client_name);
         $mail->Subject = 'Luxe Haven Team - Temporary Account Password';
+        $mail->isHTML(true);
         $mail->Body = "
            <html>
         <head>
@@ -133,16 +152,17 @@ if (isset($_POST['register'])) {
     </html>
 ";
 
-        $mail->send();
+        if (!$mail->send()) {
+            error_log("Email sending failed for $client_email: " . $mail->ErrorInfo);
+        }
     } catch (Exception $e) {
-        echo "<script>alert('Email sending failed: " . addslashes($e->getMessage()) . "');</script>";
-        // Consider whether to continue or exit here
+        error_log("Email exception for $client_email: " . $e->getMessage());
     }
 
-    $insertClientQuery = "INSERT INTO clients (client_id, client_name, client_presented_id, client_id_picture, client_id_number, client_phone, client_email, client_password, client_status) VALUES (?,?,?,?,?,?,?,?,?)";
+    $insertClientQuery = "INSERT INTO clients (client_id, client_name, client_presented_id, client_id_picture, client_picture, client_id_number, client_phone, client_email, client_password, client_status) VALUES (?,?,?,?,?,?,?,?,?,?)";
     $stmt2 = $mysqli->prepare($insertClientQuery);
-    //bind paramaters
-    $rc = $stmt2->bind_param('sssssssss', $client_id, $client_name, $client_presented_id, $client_id_picture, $client_id_number, $client_phone, $client_email, $hashed_password, $client_status);
+    //bind paramaters - use same uploaded image for both ID and profile picture
+    $rc = $stmt2->bind_param('ssssssssss', $client_id, $client_name, $client_presented_id, $client_id_picture, $client_id_picture, $client_id_number, $client_phone, $client_email, $hashed_password, $client_status);
 
     if ($stmt2->execute()) {
         echo "<script>
@@ -187,23 +207,45 @@ if (isset($_POST['register'])) {
                                 </div>
 
                                 <div class="container">
-                                    <form method="POST" enctype="multipart/form-data">
+                                    <?php
+                                    // Display error messages if any
+                                    if (isset($_SESSION['upload_error'])) {
+                                        echo "<div class='alert alert-danger alert-dismissible fade show' role='alert'>";
+                                        echo htmlspecialchars($_SESSION['upload_error']);
+                                        echo "<button type='button' class='btn-close' data-bs-dismiss='alert'></button>";
+                                        echo "</div>";
+                                        unset($_SESSION['upload_error']);
+                                    }
+
+                                    // Get form data if available
+                                    $form_data = $_SESSION['form_data'] ?? [];
+                                    unset($_SESSION['form_data']);
+                                    ?>
+                                    <form id="register_form" method="POST" enctype="multipart/form-data" onsubmit="return validateFormBeforeSubmit(event)">
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Full Name</label>
                                             <input type="text" name="client_name"
-                                                class="form-control someText shadow-none" required>
+                                                class="form-control someText shadow-none"
+                                                value="<?= htmlspecialchars($form_data['client_name'] ?? '') ?>"
+                                                required>
                                         </div>
 
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Contact No.</label>
                                             <input type="number" name="client_number"
-                                                class="form-control someText shadow-none" required>
+                                                class="form-control someText shadow-none"
+                                                value="<?= htmlspecialchars($form_data['client_number'] ?? '') ?>"
+                                                required>
                                         </div>
 
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Email Address</label>
-                                            <input type="email" name="client_email"
-                                                class="form-control someText shadow-none" required>
+                                            <input type="email" id="client_email" name="client_email"
+                                                class="form-control someText shadow-none"
+                                                value="<?= htmlspecialchars($form_data['client_email'] ?? '') ?>"
+                                                required>
+                                            <small id="email_error" class="text-danger d-none"></small>
+                                            <small id="email_success" class="text-success d-none">✓ Email available</small>
                                         </div>
 
                                         <div class="mb-2">
@@ -211,11 +253,13 @@ if (isset($_POST['register'])) {
                                             <select name="client_presented_id" required
                                                 class="form-control shadow-none someText">
                                                 <option>Select ID</option>
-                                                <option value="National ID">National ID</option>
-                                                <option value="Social Security ID">Social Security ID</option>
-                                                <option value="Passport">Passport</option>
-                                                <option value="Driver's License">Driver's License</option>
-                                                <option value="PRC License">PRC License</option>
+                                                <option value="National ID" <?= ($form_data['client_presented_id'] ?? '') === 'National ID' ? 'selected' : '' ?>>National ID</option>
+                                                <option value="Social Security ID" <?= ($form_data['client_presented_id'] ?? '') === 'Social Security ID' ? 'selected' : '' ?>>Social Security
+                                                    ID</option>
+                                                <option value="Passport" <?= ($form_data['client_presented_id'] ?? '') === 'Passport' ? 'selected' : '' ?>>Passport</option>
+                                                <option value="Driver's License" <?= ($form_data['client_presented_id'] ?? '') === "Driver's License" ? 'selected' : '' ?>>Driver's License
+                                                </option>
+                                                <option value="PRC License" <?= ($form_data['client_presented_id'] ?? '') === 'PRC License' ? 'selected' : '' ?>>PRC License</option>
                                             </select>
                                         </div>
 
@@ -228,7 +272,9 @@ if (isset($_POST['register'])) {
                                         <div class="mb-2">
                                             <label class="form-label someText m-0">Uploaded ID No.</label>
                                             <input type="text" name="client_id_number"
-                                                class="form-control someText shadow-none" required>
+                                                class="form-control someText shadow-none"
+                                                value="<?= htmlspecialchars($form_data['client_id_number'] ?? '') ?>"
+                                                required>
                                         </div>
 
                                         <div class="mb-2 d-grid mt-3">
@@ -257,6 +303,82 @@ if (isset($_POST['register'])) {
             </div>
         </div>
     </div>
+
+    <script>
+        // Real-time email validation
+        const emailInput = document.getElementById('client_email');
+
+        if (emailInput) {
+            emailInput.addEventListener('blur', function() {
+                checkEmailAvailability(this.value);
+            });
+
+            emailInput.addEventListener('input', function() {
+                // Clear validation messages while typing
+                document.getElementById('email_error').classList.add('d-none');
+                document.getElementById('email_success').classList.add('d-none');
+            });
+        }
+
+        function checkEmailAvailability(email) {
+            if (!email || !isValidEmail(email)) {
+                return;
+            }
+
+            fetch('check_email.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'email=' + encodeURIComponent(email)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const errorEl = document.getElementById('email_error');
+                const successEl = document.getElementById('email_success');
+
+                if (data.exists) {
+                    errorEl.textContent = '✗ Email already registered. Please use a different email.';
+                    errorEl.classList.remove('d-none');
+                    successEl.classList.add('d-none');
+                    emailInput.classList.add('is-invalid');
+                } else {
+                    successEl.classList.remove('d-none');
+                    errorEl.classList.add('d-none');
+                    emailInput.classList.remove('is-invalid');
+                }
+            })
+            .catch(error => {
+                console.error('Error checking email:', error);
+            });
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validateFormBeforeSubmit(event) {
+            const emailInput = document.getElementById('client_email');
+            const emailError = document.getElementById('email_error');
+
+            // Check if email error message is visible
+            if (!emailError.classList.contains('d-none')) {
+                event.preventDefault();
+                alert('Please use a different email address.');
+                return false;
+            }
+
+            // Check if email is empty
+            if (!emailInput.value.trim()) {
+                event.preventDefault();
+                alert('Please enter an email address.');
+                return false;
+            }
+
+            return true;
+        }
+    </script>
 </body>
 
 </html>

@@ -42,28 +42,28 @@ if (isset($_POST['client_submit'])) {
 
         if ($res->num_rows > 0) {
             $row = $res->fetch_assoc();
-            
+
             // Verify password
             if (verifyPassword($client_password, $row['client_password'])) {
                 // Check rate limiting
                 $rate_limit_key = "failed_attempts_" . hash('sha256', $client_email);
                 $failed_attempts = $_SESSION[$rate_limit_key] ?? 0;
-                
+
                 if ($failed_attempts >= 5) {
                     $client_created_error_display = "Too many failed attempts. Please try again later.";
                 } else {
                     // Reset failed attempts
                     $_SESSION[$rate_limit_key] = 0;
-                    
+
                     if ($row['client_2fa'] == 1) {
                         // Generate OTP with cryptographically secure random bytes
                         $otp = bin2hex(random_bytes(2));
-                        
+
                         // Store OTP in session temporarily
                         $_SESSION['temp_client_id'] = $row['client_id'];
                         $_SESSION['temp_client_otp'] = $otp;
                         $_SESSION['otp_timestamp'] = time();
-                        
+
                         // Send OTP via email
                         if (sendOTPEmail($row['client_email'], $otp)) {
                             header('Location: otp.php');
@@ -82,7 +82,7 @@ if (isset($_POST['client_submit'])) {
                 // Increment failed attempts
                 $rate_limit_key = "failed_attempts_" . hash('sha256', $client_email);
                 $_SESSION[$rate_limit_key] = ($_SESSION[$rate_limit_key] ?? 0) + 1;
-                
+
                 if ($_SESSION[$rate_limit_key] >= 5) {
                     $client_created_error_display = "Too many failed attempts. Account temporarily locked.";
                 } else {
@@ -111,7 +111,7 @@ if (isset($_POST['admin_submit'])) {
         // Check rate limiting
         $rate_limit_key = "admin_failed_attempts_" . hash('sha256', $admin_email);
         $failed_attempts = $_SESSION[$rate_limit_key] ?? 0;
-        
+
         if ($failed_attempts >= 5) {
             $client_created_error_display = "Too many failed attempts. Please try again later.";
         } else {
@@ -124,20 +124,20 @@ if (isset($_POST['admin_submit'])) {
 
             if ($res->num_rows > 0) {
                 $row = $res->fetch_assoc();
-                
+
                 // Verify password
                 if (verifyPassword($admin_password, $row['admin_password'])) {
                     // Reset failed attempts
                     $_SESSION[$rate_limit_key] = 0;
-                    
+
                     if ($row['admin_2fa'] == 1) {
                         // Generate OTP
                         $otp = bin2hex(random_bytes(2));
-                        
+
                         $_SESSION['temp_admin_id'] = $row['admin_id'];
                         $_SESSION['temp_admin_otp'] = $otp;
                         $_SESSION['otp_timestamp'] = time();
-                        
+
                         // Send OTP
                         if (sendOTPEmail($row['admin_email'], $otp)) {
                             header('Location: ./admin/otp.php');
@@ -154,7 +154,7 @@ if (isset($_POST['admin_submit'])) {
                 } else {
                     // Increment failed attempts
                     $_SESSION[$rate_limit_key] = ($_SESSION[$rate_limit_key] ?? 0) + 1;
-                    
+
                     if ($_SESSION[$rate_limit_key] >= 5) {
                         $client_created_error_display = "Too many failed attempts. Account temporarily locked.";
                     } else {

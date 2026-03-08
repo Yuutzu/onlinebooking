@@ -21,7 +21,7 @@ if (isset($_POST['register_btn'])) {
     $client_contact = trim($_POST['client_contact'] ?? '');
     $client_dob = trim($_POST['client_dob'] ?? '');
     $client_address = trim($_POST['client_address'] ?? '');
-    
+
     $email_regex = "/^[_a-z0-9-+]+(\.[_a-z0-9-+]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/";
 
     // Validate inputs
@@ -51,7 +51,7 @@ if (isset($_POST['register_btn'])) {
 
             if ($upload_result['success']) {
                 $client_picture = $upload_result['filename'];
-                
+
                 // Generate temporary password
                 $temp_password = bin2hex(random_bytes(6)); // 12 character password
                 $hashed_password = hashPassword($temp_password);

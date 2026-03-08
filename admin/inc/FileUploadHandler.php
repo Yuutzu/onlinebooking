@@ -13,8 +13,7 @@ class FileUploadHandler
         'image/jpeg' => ['jpg', 'jpeg', 'jpe'],
         'image/png' => ['png'],
         'image/gif' => ['gif'],
-        'image/webp' => ['webp'],
-        'image/bmp' => ['bmp']
+        'image/tiff' => ['tiff', 'tif']
     ];
 
     // Maximum file sizes (in bytes)

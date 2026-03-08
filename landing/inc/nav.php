@@ -30,7 +30,9 @@ if (isset($_SESSION['client_id'])) {
                 <?php if (isset($client_data)): ?>
                     <!-- Show client info if logged in -->
                     <div class="d-flex align-items-center">
-                        <img src="../../admin/dist/img/<?php echo $client_data->client_picture ?: "avatar.jpg"; ?>" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                        <img src="../../admin/dist/img/<?php echo $client_data->client_picture ?: "avatar.jpg"; ?>"
+                            class="rounded-circle"
+                            style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
                         <span class="text-light someText"><?php echo htmlspecialchars($client_data->client_name); ?></span>
                         <a id="logoutBtn" class="btn btn-danger btn-sm ms-3" href="javascript:void(0);">Logout</a>
                     </div>
@@ -45,7 +47,8 @@ if (isset($_SESSION['client_id'])) {
 
     <nav class="navbar navbar-expand-lg bg-body-tertiary mainNav">
         <div>
-            <img src="../../admin/dist/img/logos/<?php echo htmlspecialchars($settings['site_logo']); ?>" style="width: 130px;" alt="Site Logo">
+            <img src="../../admin/dist/img/logos/<?php echo htmlspecialchars($settings['site_logo']); ?>"
+                style="width: 130px;" alt="Site Logo">
         </div>
 
         <div class="collapse navbar-collapse d-flex justify-content-end" id="navbarNavDropdown">
@@ -55,7 +58,8 @@ if (isset($_SESSION['client_id'])) {
                 </li>
 
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
                         Rooms
                     </a>
                     <ul class="dropdown-menu">

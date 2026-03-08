@@ -18,10 +18,11 @@ $settings = $result->fetch_assoc();
     <title><?php echo htmlspecialchars($settings['site_name']); ?> | Main Page</title>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <!-- Dynamically load favicon if available -->
     <?php if (!empty($settings['site_favicon'])): ?>
-        <link rel="icon" type="image/png" href="./admin/dist/img/logos/<?php echo htmlspecialchars($settings['site_favicon']); ?>">
+        <link rel="icon" type="image/png"
+            href="./admin/dist/img/logos/<?php echo htmlspecialchars($settings['site_favicon']); ?>">
     <?php endif; ?>
 
     <!-- Import Links -->
@@ -37,35 +38,38 @@ $settings = $result->fetch_assoc();
     <?php require('./client/inc/nav.php'); ?>
 
     <!-- SLIDER -->
-<div class="container-fluid px-lg-0 mt-0">
-    <div class="swiper swiper-container">
-        <div class="swiper-wrapper">
-            <?php if (!empty($settings['carousel1'])): ?>
-            <div class="swiper-slide">
-                <div class="image-container">
-                    <img src="./admin/dist/img/carousels/<?php echo htmlspecialchars($settings['carousel1']); ?>" class="w-100 d-block" alt="Carousel 1">
-                </div>
-            </div>
-            <?php endif; ?>
+    <div class="container-fluid px-lg-0 mt-0">
+        <div class="swiper swiper-container">
+            <div class="swiper-wrapper">
+                <?php if (!empty($settings['carousel1'])): ?>
+                    <div class="swiper-slide">
+                        <div class="image-container">
+                            <img src="./admin/dist/img/carousels/<?php echo htmlspecialchars($settings['carousel1']); ?>"
+                                class="w-100 d-block" alt="Carousel 1">
+                        </div>
+                    </div>
+                <?php endif; ?>
 
-            <?php if (!empty($settings['carousel2'])): ?>
-            <div class="swiper-slide">
-                <div class="image-container">
-                    <img src="./admin/dist/img/carousels/<?php echo htmlspecialchars($settings['carousel2']); ?>" class="w-100 d-block" alt="Carousel 2">
-                </div>
-            </div>
-            <?php endif; ?>
+                <?php if (!empty($settings['carousel2'])): ?>
+                    <div class="swiper-slide">
+                        <div class="image-container">
+                            <img src="./admin/dist/img/carousels/<?php echo htmlspecialchars($settings['carousel2']); ?>"
+                                class="w-100 d-block" alt="Carousel 2">
+                        </div>
+                    </div>
+                <?php endif; ?>
 
-            <?php if (!empty($settings['carousel3'])): ?>
-            <div class="swiper-slide">
-                <div class="image-container">
-                    <img src="./admin/dist/img/carousels/<?php echo htmlspecialchars($settings['carousel3']); ?>" class="w-100 d-block" alt="Carousel 3">
-                </div>
+                <?php if (!empty($settings['carousel3'])): ?>
+                    <div class="swiper-slide">
+                        <div class="image-container">
+                            <img src="./admin/dist/img/carousels/<?php echo htmlspecialchars($settings['carousel3']); ?>"
+                                class="w-100 d-block" alt="Carousel 3">
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
         </div>
     </div>
-</div>
 
     <div class="container availabilityCheck"
         style="background-color: #fff; padding: 25px; border-radius: 10px; margin-top: -50px;">
@@ -136,20 +140,23 @@ $settings = $result->fetch_assoc();
                         $res = $stmt->get_result();
 
                         while ($row1 = $res->fetch_object()) {
-                        ?>
+                            ?>
 
                             <div class="card mb-4" style="width: 18rem;">
-                                <img src="./admin/dist/img/<?php echo htmlspecialchars($row1->room_picture); ?>" class="card-img-top"
-                                    style="height: 200px; object-fit:cover;">
+                                <img src="./admin/dist/img/<?php echo htmlspecialchars($row1->room_picture); ?>"
+                                    class="card-img-top" style="height: 200px; object-fit:cover;">
                                 <div class="card-body">
                                     <p class="miniTitle"><?php echo htmlspecialchars($row1->room_category); ?></p>
                                     <h5 class="cardRoomTitle"><?php echo htmlspecialchars($row1->room_name); ?></h5>
-                                    <p class="cardRoomDescription"><?php echo htmlspecialchars($row1->room_description); ?></p>
+                                    <p class="cardRoomDescription"><?php echo htmlspecialchars($row1->room_description); ?>
+                                    </p>
 
                                     <div class="container d-flex justify-content-center">
-                                        <p class="cardRoomDescription"><b>ADULTS: </b> <?php echo htmlspecialchars($row1->room_adult); ?></p>
+                                        <p class="cardRoomDescription"><b>ADULTS: </b>
+                                            <?php echo htmlspecialchars($row1->room_adult); ?></p>
                                         &nbsp; &nbsp;
-                                        <p class="cardRoomDescription"><b>CHILD: </b> <?php echo htmlspecialchars($row1->room_child); ?></p>
+                                        <p class="cardRoomDescription"><b>CHILD: </b>
+                                            <?php echo htmlspecialchars($row1->room_child); ?></p>
                                     </div>
                                 </div>
                                 <div class="mb-3 mt-0">
@@ -191,7 +198,8 @@ $settings = $result->fetch_assoc();
 
             <div class="row align-items-center mb-5 flex-lg-row-reverse">
                 <div class="col-lg-6">
-                    <img src="./client/dist/img/image.jpg" class="img-fluid rounded shadow" alt="Our Growth and Achievements">
+                    <img src="./client/dist/img/image.jpg" class="img-fluid rounded shadow"
+                        alt="Our Growth and Achievements">
                 </div>
                 <div class="col-lg-6">
                     <h3 class="bigTitle">Our Growth and Achievements</h3>
@@ -206,7 +214,8 @@ $settings = $result->fetch_assoc();
 
             <div class="row align-items-center">
                 <div class="col-lg-6">
-                    <img src="./client/dist/img/slide 2.jpg" class="img-fluid rounded shadow" alt="Our Philosophy and Promise">
+                    <img src="./client/dist/img/slide 2.jpg" class="img-fluid rounded shadow"
+                        alt="Our Philosophy and Promise">
                 </div>
                 <div class="col-lg-6">
                     <h3 class="bigTitle">Our Philosophy and Promise</h3>
@@ -240,14 +249,16 @@ $settings = $result->fetch_assoc();
                         $res = $stmt->get_result();
 
                         while ($row1 = $res->fetch_object()) {
-                        ?>
+                            ?>
 
                             <div class="card mb-4" style="width: 18rem;">
-                                <img src="./admin/dist/img/<?php echo htmlspecialchars($row1->service_picture); ?>" class="card-img-top"
-                                    style="height: 180px;">
+                                <img src="./admin/dist/img/<?php echo htmlspecialchars($row1->service_picture); ?>"
+                                    class="card-img-top" style="height: 180px;">
                                 <div class="card-body">
-                                    <h5 class="cardRoomTitle mt-2 mb-1"><?php echo htmlspecialchars($row1->service_name); ?></h5>
-                                    <p class="cardRoomDescription"><?php echo htmlspecialchars($row1->service_description); ?></p>
+                                    <h5 class="cardRoomTitle mt-2 mb-1"><?php echo htmlspecialchars($row1->service_name); ?>
+                                    </h5>
+                                    <p class="cardRoomDescription">
+                                        <?php echo htmlspecialchars($row1->service_description); ?></p>
                                 </div>
                             </div>
 

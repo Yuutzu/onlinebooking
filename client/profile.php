@@ -118,9 +118,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                         <!-- Profile Picture -->
                         <div class="col-md-4 text-center">
-                            <img src="../admin/dist/img/<?php echo $row->client_picture ?: 'avatar.jpg'; ?>"
-                                class="rounded-circle img-fluid"
-                                style="width: 150px; height: 150px; object-fit: cover;">
+                            <?php
+                            $picture_file = $row->client_picture ?: $row->client_id_picture;
+                            $image_path = '../admin/dist/img/' . (file_exists('../admin/dist/img/' . $picture_file) ? $picture_file : 'avatar.jpg');
+                            ?>
+                            <img src="<?= $image_path ?>" alt="Profile Picture" class="rounded-circle img-fluid"
+                                style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #ddd;">
+                            <p class="mt-2 text-muted"><small>
+                                    <?php
+                                    if (!file_exists('../admin/dist/img/' . $picture_file)) {
+                                        echo '(Showing default avatar - upload your picture in profile edit)';
+                                    }
+                                    ?>
+                                </small></p>
                         </div>
 
                         <!-- Profile Details -->
@@ -153,6 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <h5 class="mb-3">Edit Profile</h5>
                             <form action="profile_edit.php" method="POST" enctype="multipart/form-data">
                                 <input type="hidden" name="client_id" value="<?php echo $row->id; ?>">
+                                <?php echo CSRFToken::field(); ?>
 
                                 <div class="row">
                                     <div class="col-md-12">
@@ -213,6 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <h5 class="mb-3">Update Password</h5>
                             <form action="update_password.php" method="POST">
                                 <input type="hidden" name="client_id" value="<?php echo $row->id; ?>">
+                                <?php echo CSRFToken::field(); ?>
 
                                 <div class="col-md-12">
                                     <label class="form-label">Current Password</label>

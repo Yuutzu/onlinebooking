@@ -34,6 +34,14 @@ function getMailer($fromName = null)
     $mail->Password = env('SMTP_PASSWORD');
     $mail->Port = (int) env('SMTP_PORT', 587);
 
+    // Enable debugging if in development mode
+    if (env('APP_ENV') === 'development') {
+        $mail->SMTPDebug = 2; // Show SMTP debugging messages
+        $mail->Debugoutput = function ($str, $level) {
+            error_log("PHPMailer Debug [$level]: $str");
+        };
+    }
+
     // Set encryption
     $smtpSecure = env('SMTP_SECURE', 'tls');
     if ($smtpSecure === 'tls') {
@@ -41,6 +49,15 @@ function getMailer($fromName = null)
     } elseif ($smtpSecure === 'ssl') {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
     }
+
+    // Allow self-signed certificates (if needed for testing)
+    // $mail->SMTPOptions = array(
+    //     'ssl' => array(
+    //         'verify_peer' => false,
+    //         'verify_peer_name' => false,
+    //         'allow_self_signed' => true
+    //     )
+    // );
 
     // Set from address
     $fromEmail = env('SMTP_FROM_EMAIL', env('SMTP_USERNAME'));
